@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/recipery-dev/recipery/compare/v1.0.0...v1.1.0) (2026-08-30)
+
+
+### Features
+
+* Enhance recipe editing experience by integrating nested RecipeFormDrawer in RecipePreviewDrawer and refining open/close logic ([0bd0311](https://github.com/recipery-dev/recipery/commit/0bd031192b9c6d40f54e33e4d4637cd7dd6e37cd))
+
 ## 1.0.0 (2026-08-30)
 
 
