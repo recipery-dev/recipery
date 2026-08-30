@@ -1,0 +1,104 @@
+"use client";
+
+import * as React from "react";
+import { Search, ChefHat, SearchX } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { RecipePhoto } from "./recipe-photo";
+import { useLibraryShell } from "./library-shell-context";
+
+interface SearchDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
+  const { recipes, setSelected, settings } = useLibraryShell();
+  const resultLimit = settings.searchResultLimit;
+  const [query, setQuery] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    if (open) {
+      setQuery("");
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [open]);
+
+  const q = query.trim().toLowerCase();
+  const matches = q
+    ? recipes.filter(
+        (recipe) =>
+          recipe.title.toLowerCase().includes(q) ||
+          (recipe.source?.toLowerCase().includes(q) ?? false) ||
+          recipe.tags.some((t) => t.toLowerCase().includes(q)) ||
+          recipe.ingredients.some((i) => i.name.toLowerCase().includes(q))
+      )
+    : [];
+  const results = matches.slice(0, resultLimit);
+
+  const pick = (recipe: (typeof recipes)[number]) => {
+    setSelected(recipe);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3.5">
+          <Search className="size-5 shrink-0 text-muted-foreground" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search your recipes by title, source, or ingredient…"
+            className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+
+        <div className="max-h-[26rem] overflow-y-auto p-2">
+          {!q ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <Search className="size-6 text-muted-foreground/40" strokeWidth={1.5} />
+              <p className="text-sm text-muted-foreground">
+                Start typing to search your recipes.
+              </p>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <SearchX className="size-6 text-muted-foreground/40" strokeWidth={1.5} />
+              <p className="text-sm text-muted-foreground">No matches for “{query.trim()}”</p>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-0.5">
+              {results.map((recipe) => (
+                <li key={recipe.id}>
+                  <button
+                    type="button"
+                    onClick={() => pick(recipe)}
+                    className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent"
+                  >
+                    <div className="w-12 shrink-0">
+                      <RecipePhoto title={recipe.title} coverUrl={recipe.coverUrl} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{recipe.title}</p>
+                      {recipe.source && (
+                        <p className="truncate text-xs text-muted-foreground">{recipe.source}</p>
+                      )}
+                    </div>
+                    <ChefHat className="size-4 shrink-0 text-muted-foreground/50" />
+                  </button>
+                </li>
+              ))}
+              {matches.length > resultLimit && (
+                <li className="px-2 py-2 text-center text-xs text-muted-foreground">
+                  Showing {resultLimit} of {matches.length} matches — keep typing to narrow it down.
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
