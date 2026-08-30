@@ -15,7 +15,12 @@ export function AppShell({
   children: React.ReactNode;
   defaultSidebarOpen: boolean;
 }) {
-  const { formDrawer, closeRecipeForm, handleRecipeSaved } = useLibraryShell();
+  const { formDrawer, closeRecipeForm, handleRecipeSaved, selected } = useLibraryShell();
+  // Editing from an open preview renders its own nested RecipeFormDrawer
+  // (see RecipePreviewDrawer) so it stacks on top of the preview instead of
+  // this top-level instance, which only handles create and edit-without-a-
+  // preview (e.g. from a recipe card's context menu).
+  const editingFromPreview = !!selected && formDrawer?.mode === "edit";
 
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
@@ -35,7 +40,7 @@ export function AppShell({
       <RecipeFormDrawer
         mode={formDrawer?.mode ?? "create"}
         recipe={formDrawer?.recipe}
-        open={!!formDrawer}
+        open={!!formDrawer && !editingFromPreview}
         onOpenChange={(open) => {
           if (!open) closeRecipeForm();
         }}

@@ -86,6 +86,29 @@ function normalizeSource(author: unknown): string | undefined {
   return undefined;
 }
 
+const NAMED_HTML_ENTITIES: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
+
+/** Decodes the handful of HTML entities that show up in meta-tag content
+ * attributes (e.g. "Sally&#039;s Baking Addiction") — just numeric
+ * references and the common named ones, not a full HTML-entity table. */
+function decodeHtmlEntities(text: string): string {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity: string) => {
+    if (entity[0] === "#") {
+      const code =
+        entity[1]?.toLowerCase() === "x" ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+    }
+    return NAMED_HTML_ENTITIES[entity.toLowerCase()] ?? match;
+  });
+}
+
 /** Best-effort <meta property/name="..." content="..."> reader — attribute
  * order varies by site, so this matches the whole tag first. */
 function extractMetaContent(html: string, key: string): string | undefined {
@@ -93,7 +116,7 @@ function extractMetaContent(html: string, key: string): string | undefined {
   if (!tagMatch) return undefined;
   const contentMatch = tagMatch[0].match(/content=["']([^"']*)["']/i);
   const content = contentMatch?.[1]?.trim();
-  return content || undefined;
+  return content ? decodeHtmlEntities(content) : undefined;
 }
 
 /** Falls back to the bare domain (e.g. "allrecipes.com") when a page has
