@@ -1,0 +1,111 @@
+.logo {
+  position: relative;
+  display: block;
+  isolation: isolate;
+  aspect-ratio: 1;
+  width: 100%;
+  overflow: visible;
+  transform: translateZ(0);
+}
+
+.layer {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.layer img {
+  object-fit: contain;
+}
+
+.body {
+  z-index: 1;
+  top: 0;
+  left: 18%;
+  width: 64%;
+  height: 98%;
+  animation: body-bob 2.2s ease-in-out infinite alternate;
+  transform-origin: 50% 88%;
+}
+
+.bowl {
+  z-index: 2;
+  top: 55%;
+  left: 14%;
+  width: 72%;
+  height: 43%;
+}
+
+.liquid {
+  z-index: 3;
+  top: 58%;
+  left: 18%;
+  width: 64%;
+  height: 21%;
+  animation: liquid-slosh 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  transform-origin: 50% 72%;
+}
+
+.whisk {
+  z-index: 4;
+  top: 31%;
+  left: 7%;
+  width: 68%;
+  height: 59%;
+  animation: whisk-stir 0.82s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  transform-origin: 88% 27%;
+}
+
+.front {
+  z-index: 5;
+  top: 63%;
+  left: 16%;
+  width: 68%;
+  height: 38%;
+}
+
+.logo[data-greeting="true"] .liquid,
+.logo[data-greeting="true"] .whisk,
+:global(.group:hover) .liquid,
+:global(.group:hover) .whisk {
+  animation-duration: 0.56s;
+}
+
+@keyframes body-bob {
+  0% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  100% {
+    transform: translateY(-1.2%) rotate(0.4deg);
+  }
+}
+
+@keyframes whisk-stir {
+  0% {
+    transform: translate(-2%, 1.5%) rotate(-7deg);
+  }
+  100% {
+    transform: translate(2%, -1.5%) rotate(8deg);
+  }
+}
+
+@keyframes liquid-slosh {
+  0% {
+    transform: translate(-7%, 2%) rotate(-7deg) scaleX(0.96) scaleY(1.1);
+  }
+  50% {
+    transform: translate(0, -2%) rotate(0) scaleX(1.04) scaleY(0.96);
+  }
+  100% {
+    transform: translate(7%, 2%) rotate(7deg) scaleX(0.96) scaleY(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body,
+  .liquid,
+  .whisk {
+    animation: none;
+  }
+}
