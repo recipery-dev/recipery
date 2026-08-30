@@ -22,7 +22,10 @@ function ToastViewport({ className, ...props }: ToastPrimitive.Viewport.Props) {
     <ToastPrimitive.Viewport
       data-slot="toast-viewport"
       className={cn(
-        "pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto w-auto max-w-sm outline-none sm:right-4 sm:left-auto sm:mx-0 sm:w-full",
+        // Above every other overlay (Dialog/AlertDialog/Drawer all use
+        // z-50) — toasts should always read on top regardless of which
+        // overlay's portal happens to land later in the DOM.
+        "pointer-events-none fixed inset-x-4 bottom-4 z-[100] mx-auto w-auto max-w-sm outline-none sm:right-4 sm:left-auto sm:mx-0 sm:w-full",
         className
       )}
       {...props}
