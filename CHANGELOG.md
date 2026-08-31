@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/recipery-dev/recipery/compare/v1.3.0...v1.4.0) (2026-08-31)
+
+
+### Features
+
+* Keep the branded homepage title instead of overwriting it client-side ([aeeda79](https://github.com/recipery-dev/recipery/commit/aeeda79d1908b6aaacc07dfa05e6a38f12c6460e))
+
+
+### Bug Fixes
+
+* Update homepage title casing and separator ([d0ff8fc](https://github.com/recipery-dev/recipery/commit/d0ff8fce2e6ce8e73e641ddb3b403fabe4468ac9))
+
 ## [1.3.0](https://github.com/recipery-dev/recipery/compare/v1.2.0...v1.3.0) (2026-08-31)
 
 
