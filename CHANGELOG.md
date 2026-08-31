@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/recipery-dev/recipery/compare/v1.5.0...v1.6.0) (2026-08-31)
+
+
+### Features
+
+* Fix page titles reverting on client-side navigation ([31e40fa](https://github.com/recipery-dev/recipery/commit/31e40facb443bab7f44cb2f54961d5ae87918388))
+
 ## [1.5.0](https://github.com/recipery-dev/recipery/compare/v1.4.0...v1.5.0) (2026-08-31)
 
 
