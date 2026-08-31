@@ -1,11 +1,8 @@
-"use client";
+import type { Metadata } from "next";
+import { SettingsPage } from "@/components/settings/settings-page";
 
-import { SettingsPanel } from "@/components/settings/settings-panel";
-import { useLibraryShell } from "@/components/library/library-shell-context";
-import { useDocumentTitle } from "@/hooks/use-document-title";
+export const metadata: Metadata = { title: "Settings" };
 
-export default function SettingsPage() {
-  useDocumentTitle("Settings");
-  const { settings, activeProfile } = useLibraryShell();
-  return <SettingsPanel settings={settings} profile={activeProfile} />;
+export default function Page() {
+  return <SettingsPage />;
 }

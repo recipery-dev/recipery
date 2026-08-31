@@ -27,7 +27,12 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://recipery.dev";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title,
+  // Child routes just set a plain `title: "X"` and get "X - Recipery" for
+  // free — Next applies this template on every navigation (including
+  // client-side ones), which a manual document.title effect can't reliably
+  // win against since the router re-asserts the resolved metadata title
+  // after each transition.
+  title: { default: title, template: `%s - ${title}` },
   description,
   openGraph: {
     title,

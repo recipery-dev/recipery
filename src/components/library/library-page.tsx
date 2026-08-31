@@ -12,9 +12,9 @@ import { DEMO_MODE } from "@/lib/demo-mode";
 import { sortRecipes } from "@/lib/recipes/sort";
 import { filterRecipes, isFiltersEmpty } from "@/lib/recipes/filter";
 
-// No useDocumentTitle here — the homepage keeps the root metadata's branded
-// title (app/(app)/page.tsx) instead of the "<Section> - Recipery" pattern
-// every other page uses.
+// The title comes from app/(app)/page.tsx's own `metadata` export (an
+// absolute override, not the shared "%s - Recipery" template every other
+// route uses) — nothing to set here.
 export function LibraryPage() {
   const { recipes, selected, setSelected, recipeCardActions } = useLibraryShell();
   const [sort, changeSort] = useRecipeSort("recipery:library-sort", "recent");

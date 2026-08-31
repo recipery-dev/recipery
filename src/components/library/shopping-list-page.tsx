@@ -6,13 +6,11 @@ import { RecipePhoto } from "./recipe-photo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLibraryShell } from "./library-shell-context";
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { buildShoppingList } from "@/lib/recipes/shopping";
 import { cn } from "@/lib/utils";
 import type { Recipe } from "@/lib/recipes/types";
 
 export function ShoppingListPage() {
-  useDocumentTitle("Shopping List");
   const { recipes, shoppingList, removeRecipeFromShoppingList, clearShoppingList, toggleShoppingListChecked } =
     useLibraryShell();
 

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { LibraryPage } from "@/components/library/library-page";
 
-// Overrides the root layout's plain "Recipery" title on the homepage only
-// — other routes (Favorites, Settings, ...) keep inheriting it.
+// `absolute` bypasses the root layout's "%s - Recipery" template — every
+// other route just sets a plain `title` string and gets that template
+// applied automatically.
 export const metadata: Metadata = {
-  title: "Recipery - A self-hosted recipe library",
+  title: { absolute: "Recipery - A self-hosted recipe library" },
 };
 
 export default function Page() {
