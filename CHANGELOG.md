@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/recipery-dev/recipery/compare/v1.4.0...v1.5.0) (2026-08-31)
+
+
+### Features
+
+* Add recipe filters, shopping list, Cook Mode, and data export ([e95c6d0](https://github.com/recipery-dev/recipery/commit/e95c6d076e44ead4666ed7bcd7f78af1e5a84575))
+
 ## [1.4.0](https://github.com/recipery-dev/recipery/compare/v1.3.0...v1.4.0) (2026-08-31)
 
 
