@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toast";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import "./globals.css";
 
 const inter = Inter({
@@ -50,6 +51,16 @@ export const metadata: Metadata = {
   },
 };
 
+// Tints the mobile browser chrome (address bar) to match the app's own
+// light/dark background — separate from manifest.ts's theme_color, which
+// only applies to the installed PWA's splash screen and window frame.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#16140f" },
+  ],
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -80,6 +91,7 @@ export default async function RootLayout({
             <Toaster>{children}</Toaster>
           </TooltipProvider>
         </ThemeProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

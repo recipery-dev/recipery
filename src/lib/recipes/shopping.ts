@@ -9,6 +9,7 @@
 
 import { parseQuantityToNumber, formatNumberAsQuantity } from "./scale";
 import { convertToGrams, formatGrams } from "./convert";
+import { guessAisle, type Aisle } from "./aisle";
 import type { Recipe } from "./types";
 
 export interface ShoppingListLine {
@@ -21,6 +22,8 @@ export interface ShoppingListLine {
   /** deduped ingredient notes */
   notes: string[];
   fromRecipes: { recipeId: string; recipeTitle: string }[];
+  /** best-effort supermarket-aisle grouping — see aisle.ts */
+  aisle: Aisle;
 }
 
 interface ScaledItem {
@@ -103,7 +106,7 @@ export function buildShoppingList(entries: { recipe: Recipe; factor: number }[])
     }
     amounts.push(...nonConvertibleAmounts, ...literalAmounts);
 
-    lines.push({ key: name.toLowerCase(), name, amounts, notes, fromRecipes });
+    lines.push({ key: name.toLowerCase(), name, amounts, notes, fromRecipes, aisle: guessAisle(name) });
   }
 
   return lines.sort((a, b) => a.name.localeCompare(b.name));

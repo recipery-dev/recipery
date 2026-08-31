@@ -6,7 +6,8 @@ import { RecipePhoto } from "./recipe-photo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLibraryShell } from "./library-shell-context";
-import { buildShoppingList } from "@/lib/recipes/shopping";
+import { buildShoppingList, type ShoppingListLine } from "@/lib/recipes/shopping";
+import { AISLE_ORDER, type Aisle } from "@/lib/recipes/aisle";
 import { cn } from "@/lib/utils";
 import type { Recipe } from "@/lib/recipes/types";
 
@@ -32,6 +33,16 @@ export function ShoppingListPage() {
   };
 
   const lines = buildShoppingList(addedRecipes.map((recipe) => ({ recipe, factor: factorFor(recipe) })));
+
+  // Grouped into aisles for the store-order display below — buildShoppingList
+  // already returns lines alphabetized within the whole list, which carries
+  // over as alphabetical order within each aisle bucket too.
+  const linesByAisle = new Map<Aisle, ShoppingListLine[]>();
+  for (const line of lines) {
+    const bucket = linesByAisle.get(line.aisle);
+    if (bucket) bucket.push(line);
+    else linesByAisle.set(line.aisle, [line]);
+  }
 
   if (addedRecipes.length === 0) {
     return (
@@ -108,33 +119,38 @@ export function ShoppingListPage() {
         ))}
       </div>
 
-      <div>
+      <div className="flex flex-col gap-5">
         <h3 className="font-heading text-sm font-bold">Ingredients</h3>
-        <ul className="mt-2.5 flex flex-col gap-2">
-          {lines.map((line) => {
-            const isChecked = shoppingList.checkedOff.includes(line.key);
-            return (
-              <li key={line.key}>
-                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-                  <Checkbox
-                    checked={isChecked}
-                    onCheckedChange={() => toggleShoppingListChecked(line.key)}
-                    className="mt-0.5"
-                  />
-                  <span className={cn(isChecked && "text-muted-foreground line-through")}>
-                    {line.amounts.length > 0 && (
-                      <span className="font-medium">{line.amounts.join(" + ")} </span>
-                    )}
-                    {line.name}
-                    {line.notes.length > 0 && (
-                      <span className="text-muted-foreground"> ({line.notes.join(", ")})</span>
-                    )}
-                  </span>
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+        {AISLE_ORDER.filter((aisle) => linesByAisle.has(aisle)).map((aisle) => (
+          <div key={aisle}>
+            <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{aisle}</p>
+            <ul className="flex flex-col gap-2">
+              {linesByAisle.get(aisle)!.map((line) => {
+                const isChecked = shoppingList.checkedOff.includes(line.key);
+                return (
+                  <li key={line.key}>
+                    <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+                      <Checkbox
+                        checked={isChecked}
+                        onCheckedChange={() => toggleShoppingListChecked(line.key)}
+                        className="mt-0.5"
+                      />
+                      <span className={cn(isChecked && "text-muted-foreground line-through")}>
+                        {line.amounts.length > 0 && (
+                          <span className="font-medium">{line.amounts.join(" + ")} </span>
+                        )}
+                        {line.name}
+                        {line.notes.length > 0 && (
+                          <span className="text-muted-foreground"> ({line.notes.join(", ")})</span>
+                        )}
+                      </span>
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
   );
