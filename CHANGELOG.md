@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/recipery-dev/recipery/compare/v1.6.0...v1.7.0) (2026-08-31)
+
+
+### Features
+
+* Add installable PWA support and aisle-grouped shopping list ([d0ac2e6](https://github.com/recipery-dev/recipery/commit/d0ac2e658b75caeaa33cbd6b8dd1d0ab532d077e))
+
 ## [1.6.0](https://github.com/recipery-dev/recipery/compare/v1.5.0...v1.6.0) (2026-08-31)
 
 
