@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/recipery-dev/recipery/compare/v1.9.0...v1.10.0) (2026-08-31)
+
+
+### Features
+
+* Improve layout of rate dialog for better responsiveness ([78abd8a](https://github.com/recipery-dev/recipery/commit/78abd8ab6d472968078e4d13b922f58bc1264205))
+
 ## [1.9.0](https://github.com/recipery-dev/recipery/compare/v1.8.0...v1.9.0) (2026-08-31)
 
 
