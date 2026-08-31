@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/recipery-dev/recipery/compare/v1.8.0...v1.9.0) (2026-08-31)
+
+
+### Features
+
+* Update favorites handling and navigation in collection page ([bd4d0cd](https://github.com/recipery-dev/recipery/commit/bd4d0cd8fe903d4cfb6f7ffc9ce34b1383a6990e))
+
 ## [1.8.0](https://github.com/recipery-dev/recipery/compare/v1.7.0...v1.8.0) (2026-08-31)
 
 
