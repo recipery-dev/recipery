@@ -1,4 +1,4 @@
-import { ChefHat, CircleDashed, Star } from "lucide-react";
+import { ChefHat, CircleDashed, Heart, Star } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Recipe } from "@/lib/recipes/types";
 
@@ -15,6 +15,12 @@ export interface SmartCollection {
 
 export function computeSmartCollections(recipes: Recipe[]): SmartCollection[] {
   return [
+    {
+      id: "favorite",
+      name: "Favorites",
+      icon: Heart,
+      recipeIds: recipes.filter((r) => r.favorite).map((r) => r.id),
+    },
     {
       id: "cooked",
       name: "Cooked",

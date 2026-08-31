@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LibraryBig,
-  Heart,
   Plus,
   MoreVertical,
   Pencil,
@@ -62,7 +61,6 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Library", icon: LibraryBig },
-  { href: "/favorites", label: "Favorites", icon: Heart },
   { href: "/shopping-list", label: "Shopping List", icon: ShoppingCart },
 ];
 

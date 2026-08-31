@@ -1,8 +1,5 @@
-import type { Metadata } from "next";
-import { FavoritesPage } from "@/components/library/favorites-page";
-
-export const metadata: Metadata = { title: "Favorites" };
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <FavoritesPage />;
+  redirect("/collection/favorite");
 }

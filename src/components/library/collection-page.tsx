@@ -32,9 +32,10 @@ export function CollectionPage() {
   const [filters, changeFilters] = useRecipeFilters(
     "recipery:collection-filters",
   );
-  const collection =
-    collections.find((c) => c.id === params.id) ??
-    smartCollections.find((c) => c.id === params.id);
+  const manualCollection = collections.find((c) => c.id === params.id);
+  const smartCollection = smartCollections.find((c) => c.id === params.id);
+  const collection = manualCollection ?? smartCollection;
+  const isSmartCollection = !manualCollection && !!smartCollection;
   const collectionRecipes = collection
     ? recipes.filter((recipe) => collection.recipeIds.includes(recipe.id))
     : [];
@@ -75,7 +76,9 @@ export function CollectionPage() {
       emptyMessage={
         filterActive
           ? "Try clearing or changing your filters."
-          : "Select a recipe and use “Add to collection” to add it here."
+          : isSmartCollection
+            ? "Recipes appear here automatically when they match this smart collection."
+            : "Select a recipe and use “Add to collection” to add it here."
       }
       titleActions={
         collectionRecipes.length > 0 ? (
