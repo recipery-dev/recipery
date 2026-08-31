@@ -11,7 +11,8 @@
     "build:cloudflare": "sh scripts/build-cloudflare.sh",
     "preview:cloudflare": "sh scripts/build-cloudflare.sh && opennextjs-cloudflare preview",
     "deploy:cloudflare": "sh scripts/build-cloudflare.sh && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1118.0",
@@ -39,6 +40,7 @@
     "eslint-config-next": "15.5.24",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^3.2.7",
     "wrangler": "^4.127.0"
   }
 }

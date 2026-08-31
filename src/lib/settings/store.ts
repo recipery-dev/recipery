@@ -13,6 +13,7 @@ export interface SettingsPatch {
   recipesPerPage?: number;
   searchResultLimit?: number;
   imageMaxSizeMb?: number;
+  showIngredientGramHints?: boolean;
 }
 
 export async function updateSettings(patch: SettingsPatch): Promise<AppSettings> {

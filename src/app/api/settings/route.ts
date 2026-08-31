@@ -54,6 +54,10 @@ export async function PATCH(request: Request) {
     patch.imageMaxSizeMb = n;
   }
 
+  if (typeof body.showIngredientGramHints === "boolean") {
+    patch.showIngredientGramHints = body.showIngredientGramHints;
+  }
+
   const settings = await updateSettings(patch);
   return NextResponse.json({ settings: toPublicSettings(settings) });
 }

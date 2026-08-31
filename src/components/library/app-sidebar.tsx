@@ -39,6 +39,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { type Collection } from "@/lib/collections";
 import { useLibraryShell } from "./library-shell-context";
@@ -62,6 +63,7 @@ const FOOTER_ITEMS = [
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { setOpenMobile } = useSidebar();
   const {
     recipes,
     collections,
@@ -76,6 +78,14 @@ export function AppSidebar() {
   const [collectionDrawerOpen, setCollectionDrawerOpen] = React.useState(false);
   const [editingCollection, setEditingCollection] = React.useState<Collection | null>(null);
   const [dragOverCollectionId, setDragOverCollectionId] = React.useState<string | null>(null);
+
+  // Navigating to a new page (e.g. tapping a nav item or collection in the
+  // mobile sheet) should collapse the sidebar instead of leaving it open
+  // over the new page.
+  React.useEffect(() => {
+    setOpenMobile(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const handleCollectionDragOver = (e: React.DragEvent) => {
     if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME)) return;

@@ -3,14 +3,16 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { User, Moon, Loader2, Users, LayoutGrid } from "lucide-react";
+import { User, Moon, Loader2, Users, LayoutGrid, BarChart3 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useLibraryShell } from "@/components/library/library-shell-context";
 import { ManageProfilesPanel } from "./manage-profiles-panel";
+import { StatsPanel } from "./stats-panel";
 import { PROFILE_COLORS, type PublicProfile } from "@/lib/profiles/types";
 import type { PublicAppSettings } from "@/lib/settings/types";
 
@@ -19,7 +21,7 @@ interface SettingsPanelProps {
   profile: PublicProfile;
 }
 
-type Category = "profile" | "theme" | "profiles" | "library";
+type Category = "profile" | "stats" | "theme" | "profiles" | "library";
 
 const CATEGORIES: {
   id: Category;
@@ -28,6 +30,7 @@ const CATEGORIES: {
   adminOnly?: boolean;
 }[] = [
   { id: "profile", label: "Profile", icon: User },
+  { id: "stats", label: "Stats", icon: BarChart3 },
   { id: "profiles", label: "Manage Profiles", icon: Users, adminOnly: true },
   { id: "theme", label: "Theme", icon: Moon },
   { id: "library", label: "Library", icon: LayoutGrid, adminOnly: true },
@@ -135,6 +138,9 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
   const [recipesPerPage, setRecipesPerPage] = React.useState(settings.recipesPerPage);
   const [searchResultLimit, setSearchResultLimit] = React.useState(settings.searchResultLimit);
   const [imageMaxSizeMb, setImageMaxSizeMb] = React.useState(settings.imageMaxSizeMb);
+  const [showIngredientGramHints, setShowIngredientGramHints] = React.useState(
+    settings.showIngredientGramHints
+  );
 
   React.useEffect(() => {
     setName(profile.name);
@@ -251,6 +257,21 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageMaxSizeMb: value ?? imageMaxSizeMb }),
+      });
+      if (!res.ok) throw new Error();
+      notifySaved();
+      router.refresh();
+    } catch {
+      toast.add({ title: "Couldn't save settings", type: "error" });
+    }
+  };
+
+  const saveShowIngredientGramHints = async (value: boolean) => {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ showIngredientGramHints: value }),
       });
       if (!res.ok) throw new Error();
       notifySaved();
@@ -388,6 +409,8 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
           </div>
         )}
 
+        {category === "stats" && <StatsPanel />}
+
         {category === "theme" && (
           <SectionCard title="Theme" description="Choose how Recipery looks on this device.">
             <SettingRow
@@ -492,6 +515,18 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                 }}
                 className="w-20"
+              />
+            </SettingRow>
+            <SettingRow
+              title="Ingredient gram weights"
+              description="Show an approximate gram weight next to ingredient quantities like cups and tablespoons, using a built-in density table. Not exact for every ingredient."
+            >
+              <Switch
+                checked={showIngredientGramHints}
+                onCheckedChange={(checked) => {
+                  setShowIngredientGramHints(checked);
+                  saveShowIngredientGramHints(checked);
+                }}
               />
             </SettingRow>
           </SectionCard>

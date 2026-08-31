@@ -60,7 +60,7 @@ export function RecipePreviewDrawer() {
       modal={false}
       swipeDirection="right"
     >
-      <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:sm:[--drawer-content-width:min(32rem,92vw)]!">
+      <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:[--drawer-content-width:94vw]! data-[swipe-axis=x]:sm:[--drawer-content-width:min(36rem,92vw)]!">
         {displayedRecipe && (
           <RecipeDetailPanel
             recipe={displayedRecipe}

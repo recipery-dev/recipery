@@ -31,7 +31,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { scaleQuantity } from "@/lib/recipes/scale";
+import { parseQuantityToNumber, scaleQuantity } from "@/lib/recipes/scale";
+import { convertToGrams, formatGrams } from "@/lib/recipes/convert";
 import { useLibraryShell } from "./library-shell-context";
 import { recipeStepImageUrl, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
 import type { Collection } from "@/lib/collections";
@@ -59,7 +60,7 @@ export function RecipeDetailPanel({
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
   const [checked, setChecked] = React.useState<Set<string>>(new Set());
   const [servings, setServings] = React.useState(recipe.servings ?? 0);
-  const { activeProfile } = useLibraryShell();
+  const { activeProfile, settings } = useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
 
   // A different recipe was opened — reset the checklist and servings scaler
@@ -101,7 +102,7 @@ export function RecipeDetailPanel({
   };
 
   return (
-    <aside className="relative flex h-full w-full flex-col overflow-y-auto p-6">
+    <aside className="relative flex h-full w-full flex-col overflow-x-hidden overflow-y-auto p-6">
       <button
         type="button"
         onClick={onClose}
@@ -256,6 +257,14 @@ export function RecipeDetailPanel({
             {recipe.ingredients.map((ingredient) => {
               const isChecked = checked.has(ingredient.id);
               const quantity = scaleQuantity(ingredient.quantity, factor);
+              const gramHint = (() => {
+                if (!settings.showIngredientGramHints) return null;
+                if (!ingredient.unit || ingredient.unit.trim().toLowerCase() === "g") return null;
+                const numericQty = ingredient.quantity ? parseQuantityToNumber(ingredient.quantity) : null;
+                if (numericQty === null) return null;
+                const grams = convertToGrams(numericQty * factor, ingredient.unit, ingredient.name);
+                return grams === null ? null : formatGrams(grams);
+              })();
               return (
                 <li key={ingredient.id}>
                   <label className="flex cursor-pointer items-start gap-2.5 text-sm">
@@ -269,6 +278,7 @@ export function RecipeDetailPanel({
                       {ingredient.unit && <span className="font-medium">{ingredient.unit} </span>}
                       {ingredient.name}
                       {ingredient.note && <span className="text-muted-foreground"> ({ingredient.note})</span>}
+                      {gramHint && <span className="text-muted-foreground"> ({gramHint})</span>}
                     </span>
                   </label>
                 </li>

@@ -31,7 +31,7 @@ const NICE_FRACTIONS: [number, string][] = [
   [7 / 8, "7/8"],
 ];
 
-function parseQuantityToNumber(raw: string): number | null {
+export function parseQuantityToNumber(raw: string): number | null {
   const qty = raw.trim();
   if (!qty) return null;
 

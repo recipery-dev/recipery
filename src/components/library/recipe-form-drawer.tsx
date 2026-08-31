@@ -298,7 +298,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       modal={false}
       swipeDirection="right"
     >
-      <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:sm:[--drawer-content-width:min(32rem,92vw)]!">
+      <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:[--drawer-content-width:94vw]! data-[swipe-axis=x]:sm:[--drawer-content-width:min(36rem,92vw)]!">
         <DrawerHeader>
           <DrawerTitle>{mode === "create" ? "New Recipe" : "Edit Recipe"}</DrawerTitle>
           <DrawerDescription className="pb-4">
@@ -308,7 +308,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
           </DrawerDescription>
         </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto px-4 pt-4">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4">
           <div className="flex flex-col gap-6 pb-4">
             <div className="flex flex-col gap-2">
               <button
