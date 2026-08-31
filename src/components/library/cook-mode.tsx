@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 import { IngredientChecklist } from "./ingredient-checklist";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { useLibraryShell } from "./library-shell-context";
 import { recipeStepImageUrl, type Recipe } from "@/lib/recipes/types";
 
@@ -23,6 +24,7 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
   const [stepIndex, setStepIndex] = React.useState(0);
   const [checked, setChecked] = React.useState<Set<string>>(new Set());
   const [showIngredients, setShowIngredients] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const stepCount = recipe?.steps.length ?? 0;
 
@@ -35,12 +37,27 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
     setShowIngredients(false);
   }, [recipe?.id, open]);
 
-  const goPrev = React.useCallback(() => setStepIndex((i) => Math.max(0, i - 1)), []);
+  // Cook Mode is rendered as a sibling of the (still-open, non-modal)
+  // recipe drawer, so focus can be left sitting on the drawer's own DOM
+  // underneath (e.g. its popup container reclaims focus on open). Move
+  // focus in for a11y, but don't rely on it for the shortcuts below.
+  React.useEffect(() => {
+    if (!open) return;
+    containerRef.current?.focus();
+  }, [open]);
+
+  const goPrev = React.useCallback(
+    () => setStepIndex((i) => Math.max(0, i - 1)),
+    [],
+  );
   const goNext = React.useCallback(
     () => setStepIndex((i) => Math.min(stepCount - 1, i + 1)),
-    [stepCount]
+    [stepCount],
   );
 
+  // Capture phase, on document, so this fires regardless of which element
+  // in the underlying drawer currently has focus — the drawer has no
+  // capture-phase handler of its own to race against this way.
   React.useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -48,8 +65,8 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [open, goPrev, goNext, onClose]);
 
   // Keep the screen awake while cooking. Feature-detected — Cook Mode works
@@ -95,7 +112,9 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
   };
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current === null) return;
-    const dx = (e.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
+    const dx =
+      (e.changedTouches[0]?.clientX ?? touchStartX.current) -
+      touchStartX.current;
     touchStartX.current = null;
     if (Math.abs(dx) < 50) return;
     if (dx > 0) goPrev();
@@ -119,15 +138,19 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
 
   return (
     <div
+      ref={containerRef}
       role="dialog"
       aria-modal="true"
       aria-label={`Cook mode: ${recipe.title}`}
-      className="fixed inset-0 z-[60] flex flex-col bg-background"
+      tabIndex={-1}
+      className="fixed inset-0 z-[60] flex flex-col bg-background outline-none"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-        <h2 className="min-w-0 truncate font-heading text-base font-bold">{recipe.title}</h2>
+        <h2 className="min-w-0 truncate font-heading text-base font-bold">
+          {recipe.title}
+        </h2>
         <div className="flex shrink-0 items-center gap-2">
           {recipe.servings !== undefined && (
             <div className="flex items-center gap-0.5 rounded-full bg-secondary px-1 py-1">
@@ -152,7 +175,12 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
               </button>
             </div>
           )}
-          <Button variant="ghost" size="icon" aria-label="Exit cook mode" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Exit cook mode"
+            onClick={onClose}
+          >
             <X className="size-5" />
           </Button>
         </div>
@@ -177,7 +205,9 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
             </p>
           </>
         ) : (
-          <p className="text-center text-muted-foreground">This recipe has no steps.</p>
+          <p className="text-center text-muted-foreground">
+            This recipe has no steps.
+          </p>
         )}
       </div>
 
@@ -194,7 +224,11 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
           </div>
         )}
         <div className="flex items-center justify-between gap-3 p-4">
-          <Button variant="outline" size="sm" onClick={() => setShowIngredients((v) => !v)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowIngredients((v) => !v)}
+          >
             {showIngredients ? "Hide" : "Show"} ingredients
           </Button>
           <div className="flex items-center gap-2">
@@ -219,6 +253,12 @@ export function CookMode({ recipe, open, onClose }: CookModeProps) {
           </div>
         </div>
       </div>
+
+      <Progress
+        value={stepCount > 0 ? ((stepIndex + 1) / stepCount) * 100 : 0}
+        aria-label="Step progress"
+        className="w-full shrink-0"
+      />
     </div>
   );
 }

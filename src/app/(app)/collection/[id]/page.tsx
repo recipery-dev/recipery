@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getActiveProfile } from "@/lib/profiles/store";
 import { listCollections } from "@/lib/collections/store";
+import { computeSmartCollections } from "@/lib/collections/smart";
 import { CollectionPage } from "@/components/library/collection-page";
 
 export async function generateMetadata({
@@ -11,7 +12,11 @@ export async function generateMetadata({
   const { id } = await params;
   const profile = await getActiveProfile();
   const collections = await listCollections(profile.id);
-  const collection = collections.find((c) => c.id === id);
+  // Smart collection names are static — no need for the real recipe list
+  // just to resolve a page title.
+  const collection =
+    collections.find((c) => c.id === id) ??
+    computeSmartCollections([]).find((c) => c.id === id);
   return { title: collection?.name ?? "Collection" };
 }
 

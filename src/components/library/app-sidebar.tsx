@@ -3,7 +3,17 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LibraryBig, Heart, Plus, MoreVertical, Pencil, ShoppingCart, Trash2, Settings, HelpCircle } from "lucide-react";
+import {
+  LibraryBig,
+  Heart,
+  Plus,
+  MoreVertical,
+  Pencil,
+  ShoppingCart,
+  Trash2,
+  Settings,
+  HelpCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECIPE_DRAG_MIME } from "@/lib/dnd";
 import { toast } from "@/components/ui/toast";
@@ -58,7 +68,12 @@ const NAV_ITEMS: NavItem[] = [
 
 const FOOTER_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings, external: false },
-  { href: "https://docs.recipery.dev", label: "Help", icon: HelpCircle, external: true },
+  {
+    href: "https://docs.recipery.dev",
+    label: "Help",
+    icon: HelpCircle,
+    external: true,
+  },
 ] as const;
 
 export function AppSidebar() {
@@ -68,6 +83,7 @@ export function AppSidebar() {
   const {
     recipes,
     collections,
+    smartCollections,
     createCollection,
     renameCollection,
     recolorCollection,
@@ -75,10 +91,15 @@ export function AppSidebar() {
     addRecipeToCollection,
   } = useLibraryShell();
 
-  const [confirmDelete, setConfirmDelete] = React.useState<Collection | null>(null);
+  const [confirmDelete, setConfirmDelete] = React.useState<Collection | null>(
+    null,
+  );
   const [collectionDrawerOpen, setCollectionDrawerOpen] = React.useState(false);
-  const [editingCollection, setEditingCollection] = React.useState<Collection | null>(null);
-  const [dragOverCollectionId, setDragOverCollectionId] = React.useState<string | null>(null);
+  const [editingCollection, setEditingCollection] =
+    React.useState<Collection | null>(null);
+  const [dragOverCollectionId, setDragOverCollectionId] = React.useState<
+    string | null
+  >(null);
 
   // Navigating to a new page (e.g. tapping a nav item or collection in the
   // mobile sheet) should collapse the sidebar instead of leaving it open
@@ -94,28 +115,33 @@ export function AppSidebar() {
     e.dataTransfer.dropEffect = "copy";
   };
 
-  const handleCollectionDrop = (collection: Collection) => (e: React.DragEvent) => {
-    if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME)) return;
-    e.preventDefault();
-    setDragOverCollectionId(null);
-    const recipeId = e.dataTransfer.getData(RECIPE_DRAG_MIME);
-    if (!recipeId) return;
-    const recipe = recipes.find((r) => r.id === recipeId);
-    if (collection.recipeIds.includes(recipeId)) {
+  const handleCollectionDrop =
+    (collection: Collection) => (e: React.DragEvent) => {
+      if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME)) return;
+      e.preventDefault();
+      setDragOverCollectionId(null);
+      const recipeId = e.dataTransfer.getData(RECIPE_DRAG_MIME);
+      if (!recipeId) return;
+      const recipe = recipes.find((r) => r.id === recipeId);
+      if (collection.recipeIds.includes(recipeId)) {
+        toast.add({
+          title: "Already in collection",
+          description: recipe
+            ? `"${recipe.title}" is already in ${collection.name}`
+            : undefined,
+          type: "info",
+        });
+        return;
+      }
+      addRecipeToCollection(collection.id, recipeId);
       toast.add({
-        title: "Already in collection",
-        description: recipe ? `"${recipe.title}" is already in ${collection.name}` : undefined,
-        type: "info",
+        title: "Added to collection",
+        description: recipe
+          ? `"${recipe.title}" was added to ${collection.name}`
+          : undefined,
+        type: "success",
       });
-      return;
-    }
-    addRecipeToCollection(collection.id, recipeId);
-    toast.add({
-      title: "Added to collection",
-      description: recipe ? `"${recipe.title}" was added to ${collection.name}` : undefined,
-      type: "success",
-    });
-  };
+    };
 
   const startCreate = () => {
     setEditingCollection(null);
@@ -162,30 +188,62 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="uppercase tracking-wider">Collections</SidebarGroupLabel>
-          <SidebarGroupAction onClick={startCreate} title="New collection" aria-label="New collection">
+          <SidebarGroupLabel className="uppercase tracking-wider">
+            Smart Collections
+          </SidebarGroupLabel>
+          <SidebarMenu className="gap-1">
+            {smartCollections.map((collection) => (
+              <SidebarMenuItem key={collection.id}>
+                <SidebarMenuButton
+                  isActive={pathname === `/collection/${collection.id}`}
+                  tooltip={collection.name}
+                  render={<Link href={`/collection/${collection.id}`} />}
+                >
+                  <collection.icon />
+                  <span>{collection.name}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="uppercase tracking-wider">
+            Collections
+          </SidebarGroupLabel>
+          <SidebarGroupAction
+            onClick={startCreate}
+            title="New collection"
+            aria-label="New collection"
+          >
             <Plus />
           </SidebarGroupAction>
           <SidebarMenu className="gap-1">
             {collections.map((collection) => {
               const active = pathname === `/collection/${collection.id}`;
-              const letter = collection.name.trim().charAt(0).toUpperCase() || "?";
+              const letter =
+                collection.name.trim().charAt(0).toUpperCase() || "?";
 
               return (
                 <SidebarMenuItem
                   key={collection.id}
                   onDragOver={handleCollectionDragOver}
                   onDragEnter={(e) => {
-                    if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME)) return;
+                    if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME))
+                      return;
                     setDragOverCollectionId(collection.id);
                   }}
                   onDragLeave={(e) => {
                     // dragleave fires when moving onto a child too — only
                     // clear the highlight once the pointer actually left
                     // the row, or it flickers.
-                    if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME)) return;
-                    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                    setDragOverCollectionId((prev) => (prev === collection.id ? null : prev));
+                    if (!e.dataTransfer.types.includes(RECIPE_DRAG_MIME))
+                      return;
+                    if (e.currentTarget.contains(e.relatedTarget as Node))
+                      return;
+                    setDragOverCollectionId((prev) =>
+                      prev === collection.id ? null : prev,
+                    );
                   }}
                   onDrop={handleCollectionDrop(collection)}
                 >
@@ -195,11 +253,16 @@ export function AppSidebar() {
                     render={<Link href={`/collection/${collection.id}`} />}
                     className={cn(
                       dragOverCollectionId === collection.id &&
-                        "bg-sidebar-accent text-sidebar-accent-foreground ring-2 ring-sidebar-ring"
+                        "bg-sidebar-accent text-sidebar-accent-foreground ring-2 ring-sidebar-ring",
                     )}
                   >
                     <Avatar className="size-5">
-                      <AvatarFallback className={cn(collection.color, "text-[10px] font-semibold text-white")}>
+                      <AvatarFallback
+                        className={cn(
+                          collection.color,
+                          "text-[10px] font-semibold text-white",
+                        )}
+                      >
                         {letter}
                       </AvatarFallback>
                     </Avatar>
@@ -208,17 +271,27 @@ export function AppSidebar() {
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={
-                        <SidebarMenuAction showOnHover aria-label={`${collection.name} options`} />
+                        <SidebarMenuAction
+                          showOnHover
+                          aria-label={`${collection.name} options`}
+                        />
                       }
                     >
                       <MoreVertical />
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" side="right" className="w-36">
+                    <DropdownMenuContent
+                      align="end"
+                      side="right"
+                      className="w-36"
+                    >
                       <DropdownMenuItem onClick={() => startEdit(collection)}>
                         <Pencil className="size-3.5" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(collection)}>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setConfirmDelete(collection)}
+                      >
                         <Trash2 className="size-3.5" />
                         Delete
                       </DropdownMenuItem>
@@ -248,7 +321,11 @@ export function AppSidebar() {
                 tooltip={item.label}
                 render={
                   item.external ? (
-                    <a href={item.href} target="_blank" rel="noopener noreferrer" />
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
                   ) : (
                     <Link href={item.href} />
                   )

@@ -4,11 +4,22 @@ import * as React from "react";
 import { ArrowLeft, ArrowRight, ChefHat } from "lucide-react";
 import { RecipeCard, type RecipeCardActions } from "./recipe-card";
 import { useLibraryShell } from "./library-shell-context";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 import type { Recipe } from "@/lib/recipes/types";
 
 /** Grid wrapper shared by every view that lays out recipe tiles (library, favorites, collections). */
 export function RecipeGridLayout({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">{children}</div>;
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
+      {children}
+    </div>
+  );
 }
 
 interface RecipeGridProps {
@@ -52,17 +63,15 @@ export function RecipeGrid({
         {titleActions}
       </div>
       {recipes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <EmptyIcon className="size-5 text-muted-foreground" strokeWidth={1.75} />
-          </div>
-          <div className="space-y-1 px-6">
-            <p className="text-sm font-semibold">{emptyTitle}</p>
-            <p className="mx-auto max-w-xs text-sm text-muted-foreground">
-              {emptyMessage}
-            </p>
-          </div>
-        </div>
+        <Empty className="border py-16">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <EmptyIcon strokeWidth={1.75} />
+            </EmptyMedia>
+            <EmptyTitle>{emptyTitle}</EmptyTitle>
+            <EmptyDescription>{emptyMessage}</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
           <RecipeGridLayout>

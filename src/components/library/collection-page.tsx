@@ -16,11 +16,25 @@ import { filterRecipes, isFiltersEmpty } from "@/lib/recipes/filter";
 
 export function CollectionPage() {
   const params = useParams<{ id: string }>();
-  const { recipes, collections, selected, setSelected, recipeCardActions, addRecipeToShoppingList } =
-    useLibraryShell();
-  const [sort, changeSort] = useRecipeSort("recipery:collection-sort", "recent");
-  const [filters, changeFilters] = useRecipeFilters("recipery:collection-filters");
-  const collection = collections.find((c) => c.id === params.id);
+  const {
+    recipes,
+    collections,
+    smartCollections,
+    selected,
+    setSelected,
+    recipeCardActions,
+    addRecipeToShoppingList,
+  } = useLibraryShell();
+  const [sort, changeSort] = useRecipeSort(
+    "recipery:collection-sort",
+    "recent",
+  );
+  const [filters, changeFilters] = useRecipeFilters(
+    "recipery:collection-filters",
+  );
+  const collection =
+    collections.find((c) => c.id === params.id) ??
+    smartCollections.find((c) => c.id === params.id);
   const collectionRecipes = collection
     ? recipes.filter((recipe) => collection.recipeIds.includes(recipe.id))
     : [];
@@ -53,7 +67,11 @@ export function CollectionPage() {
       onSelect={setSelected}
       actions={recipeCardActions}
       emptyIcon={filterActive ? SearchX : FolderOpen}
-      emptyTitle={filterActive ? "No recipes match your filters" : "This collection is empty"}
+      emptyTitle={
+        filterActive
+          ? "No recipes match your filters"
+          : "This collection is empty"
+      }
       emptyMessage={
         filterActive
           ? "Try clearing or changing your filters."
@@ -62,11 +80,20 @@ export function CollectionPage() {
       titleActions={
         collectionRecipes.length > 0 ? (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={addAllToShoppingList}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1.5"
+              onClick={addAllToShoppingList}
+            >
               <ShoppingCart className="size-3.5" />
               <span className="hidden sm:inline">Add all to shopping list</span>
             </Button>
-            <LibraryFilterMenu recipes={collectionRecipes} value={filters} onChange={changeFilters} />
+            <LibraryFilterMenu
+              recipes={collectionRecipes}
+              value={filters}
+              onChange={changeFilters}
+            />
             <LibrarySortMenu value={sort} onChange={changeSort} />
           </div>
         ) : null

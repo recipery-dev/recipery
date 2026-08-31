@@ -5,8 +5,17 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { useCollections } from "@/hooks/use-collections";
 import { useShoppingList } from "@/hooks/use-shopping-list";
-import { recipeCoverUrl, toLibraryRecipe, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
+import {
+  recipeCoverUrl,
+  toLibraryRecipe,
+  type Recipe,
+  type RecipeRecord,
+} from "@/lib/recipes/types";
 import type { Collection } from "@/lib/collections";
+import {
+  computeSmartCollections,
+  type SmartCollection,
+} from "@/lib/collections/smart";
 import type { ShoppingList } from "@/lib/shopping-list";
 import type { PublicProfile } from "@/lib/profiles/types";
 import type { PublicAppSettings } from "@/lib/settings/types";
@@ -23,6 +32,7 @@ interface LibraryShellContextValue {
   cookMode: boolean;
   setCookMode: (on: boolean) => void;
   collections: Collection[];
+  smartCollections: SmartCollection[];
   createCollection: (name: string, color: string) => void;
   renameCollection: (id: string, name: string) => void;
   recolorCollection: (id: string, color: string) => void;
@@ -47,11 +57,13 @@ interface LibraryShellContextValue {
   handleRecipeSaved: (record: RecipeRecord) => void;
 }
 
-const LibraryShellContext = React.createContext<LibraryShellContextValue | null>(null);
+const LibraryShellContext =
+  React.createContext<LibraryShellContextValue | null>(null);
 
 export function useLibraryShell(): LibraryShellContextValue {
   const ctx = React.useContext(LibraryShellContext);
-  if (!ctx) throw new Error("useLibraryShell must be used within LibraryShellProvider");
+  if (!ctx)
+    throw new Error("useLibraryShell must be used within LibraryShellProvider");
   return ctx;
 }
 
@@ -83,7 +95,9 @@ export function LibraryShellProvider({
 
   // Kept around during the close transition so the panel doesn't blank out
   // while it's sliding off-screen.
-  const [displayedRecipe, setDisplayedRecipe] = React.useState<Recipe | null>(null);
+  const [displayedRecipe, setDisplayedRecipe] = React.useState<Recipe | null>(
+    null,
+  );
   React.useEffect(() => {
     if (selected) setDisplayedRecipe(selected);
   }, [selected]);
@@ -113,7 +127,7 @@ export function LibraryShellProvider({
       if (on) router.push(url, { scroll: false });
       else router.replace(url, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams],
   );
 
   const {
@@ -125,6 +139,11 @@ export function LibraryShellProvider({
     toggleRecipeInCollection,
     addRecipeToCollection,
   } = useCollections(activeProfileId);
+
+  const smartCollections = React.useMemo(
+    () => computeSmartCollections(recipes),
+    [recipes],
+  );
 
   const {
     shoppingList,
@@ -144,14 +163,15 @@ export function LibraryShellProvider({
       if (opts?.replace) router.replace(url, { scroll: false });
       else router.push(url, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams],
   );
 
   // Opening pushes a new history entry (so the back button closes the
   // drawer); closing replaces instead of stacking a redundant "closed" entry.
   const setSelected = React.useCallback(
-    (recipe: Recipe | null) => setRecipeParam(recipe?.id ?? null, { replace: recipe === null }),
-    [setRecipeParam]
+    (recipe: Recipe | null) =>
+      setRecipeParam(recipe?.id ?? null, { replace: recipe === null }),
+    [setRecipeParam],
   );
 
   React.useEffect(() => {
@@ -181,7 +201,11 @@ export function LibraryShellProvider({
         });
         const data = await res.json();
         if (!res.ok) {
-          toast.add({ title: "Couldn't import that recipe", description: data.error, type: "error" });
+          toast.add({
+            title: "Couldn't import that recipe",
+            description: data.error,
+            type: "error",
+          });
           return;
         }
         handleCreated(data.recipe as RecipeRecord);
@@ -197,7 +221,7 @@ export function LibraryShellProvider({
         setImporting(false);
       }
     },
-    [setRecipeParam]
+    [setRecipeParam],
   );
 
   // Merges the record onto the existing Recipe rather than replacing it: a
@@ -205,14 +229,20 @@ export function LibraryShellProvider({
   // values and simply overwrites them here. `selected` re-derives from
   // `recipes` automatically, so only `displayedRecipe` needs an explicit nudge.
   const handleRecipeUpdated = (record: RecipeRecord & Partial<Recipe>) => {
-    const merge = (prev: Recipe): Recipe => ({ ...prev, ...record, coverUrl: recipeCoverUrl(record) });
+    const merge = (prev: Recipe): Recipe => ({
+      ...prev,
+      ...record,
+      coverUrl: recipeCoverUrl(record),
+    });
     setRecipes((prev) => prev.map((r) => (r.id === record.id ? merge(r) : r)));
-    setDisplayedRecipe((prev) => (prev && prev.id === record.id ? merge(prev) : prev));
+    setDisplayedRecipe((prev) =>
+      prev && prev.id === record.id ? merge(prev) : prev,
+    );
   };
 
   const handleUpdateRecipe = async (
     recipeId: string,
-    patch: { rating?: number; favorite?: boolean; cooked?: boolean }
+    patch: { rating?: number; favorite?: boolean; cooked?: boolean },
   ) => {
     const res = await fetch(`/api/recipes/${recipeId}`, {
       method: "PATCH",
@@ -235,18 +265,24 @@ export function LibraryShellProvider({
     if (selectedId === recipeId) setRecipeParam(null, { replace: true });
     toast.add({
       title: "Recipe deleted",
-      description: title ? `"${title}" was removed from your library` : undefined,
+      description: title
+        ? `"${title}" was removed from your library`
+        : undefined,
       type: "success",
     });
   };
 
-  const [formDrawer, setFormDrawer] = React.useState<{ mode: "create" | "edit"; recipe?: RecipeRecord } | null>(
-    null
+  const [formDrawer, setFormDrawer] = React.useState<{
+    mode: "create" | "edit";
+    recipe?: RecipeRecord;
+  } | null>(null);
+  const openCreateRecipe = React.useCallback(
+    () => setFormDrawer({ mode: "create" }),
+    [],
   );
-  const openCreateRecipe = React.useCallback(() => setFormDrawer({ mode: "create" }), []);
   const openEditRecipe = React.useCallback(
     (recipe: RecipeRecord) => setFormDrawer({ mode: "edit", recipe }),
-    []
+    [],
   );
   const closeRecipeForm = React.useCallback(() => setFormDrawer(null), []);
 
@@ -267,7 +303,8 @@ export function LibraryShellProvider({
     onEditRecipe: openEditRecipe,
   };
 
-  const activeProfile = profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
+  const activeProfile =
+    profiles.find((p) => p.id === activeProfileId) ?? profiles[0];
 
   const value: LibraryShellContextValue = {
     recipes,
@@ -279,6 +316,7 @@ export function LibraryShellProvider({
     cookMode,
     setCookMode,
     collections,
+    smartCollections,
     createCollection,
     renameCollection,
     recolorCollection,
@@ -303,5 +341,9 @@ export function LibraryShellProvider({
     handleRecipeSaved,
   };
 
-  return <LibraryShellContext.Provider value={value}>{children}</LibraryShellContext.Provider>;
+  return (
+    <LibraryShellContext.Provider value={value}>
+      {children}
+    </LibraryShellContext.Provider>
+  );
 }
