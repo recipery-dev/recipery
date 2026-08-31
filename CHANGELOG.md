@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/recipery-dev/recipery/compare/v1.7.0...v1.8.0) (2026-08-31)
+
+
+### Features
+
+* Refactor sidebar and collection components for improved readability and structure ([32692f4](https://github.com/recipery-dev/recipery/commit/32692f49e5e5f402175ccab42bb81cbea93a12b6))
+
 ## [1.7.0](https://github.com/recipery-dev/recipery/compare/v1.6.0...v1.7.0) (2026-08-31)
 
 
