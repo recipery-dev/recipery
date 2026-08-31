@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LibraryBig, Heart, Plus, MoreVertical, Pencil, Trash2, Settings, HelpCircle } from "lucide-react";
+import { LibraryBig, Heart, Plus, MoreVertical, Pencil, ShoppingCart, Trash2, Settings, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RECIPE_DRAG_MIME } from "@/lib/dnd";
 import { toast } from "@/components/ui/toast";
@@ -53,6 +53,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Library", icon: LibraryBig },
   { href: "/favorites", label: "Favorites", icon: Heart },
+  { href: "/shopping-list", label: "Shopping List", icon: ShoppingCart },
 ];
 
 const FOOTER_ITEMS = [

@@ -55,7 +55,7 @@ export function parseQuantityToNumber(raw: string): number | null {
   return null;
 }
 
-function formatNumberAsQuantity(n: number): string {
+export function formatNumberAsQuantity(n: number): string {
   if (n <= 0) return "0";
 
   const whole = Math.floor(n);

@@ -4,8 +4,10 @@ import * as React from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 import { useCollections } from "@/hooks/use-collections";
+import { useShoppingList } from "@/hooks/use-shopping-list";
 import { recipeCoverUrl, toLibraryRecipe, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
 import type { Collection } from "@/lib/collections";
+import type { ShoppingList } from "@/lib/shopping-list";
 import type { PublicProfile } from "@/lib/profiles/types";
 import type { PublicAppSettings } from "@/lib/settings/types";
 import type { RecipeCardActions } from "./recipe-card";
@@ -15,6 +17,11 @@ interface LibraryShellContextValue {
   selected: Recipe | null;
   setSelected: (recipe: Recipe | null) => void;
   displayedRecipe: Recipe | null;
+  /** shared between the recipe detail drawer and Cook Mode, so scaling stays in sync between the two */
+  servings: number;
+  setServings: (servings: number) => void;
+  cookMode: boolean;
+  setCookMode: (on: boolean) => void;
   collections: Collection[];
   createCollection: (name: string, color: string) => void;
   renameCollection: (id: string, name: string) => void;
@@ -22,6 +29,11 @@ interface LibraryShellContextValue {
   deleteCollection: (id: string) => void;
   addRecipeToCollection: (collectionId: string, recipeId: string) => void;
   recipeCardActions: RecipeCardActions;
+  shoppingList: ShoppingList;
+  addRecipeToShoppingList: (recipeId: string) => void;
+  removeRecipeFromShoppingList: (recipeId: string) => void;
+  clearShoppingList: () => void;
+  toggleShoppingListChecked: (key: string) => void;
   profiles: PublicProfile[];
   activeProfileId: string;
   activeProfile: PublicProfile;
@@ -76,6 +88,34 @@ export function LibraryShellProvider({
     if (selected) setDisplayedRecipe(selected);
   }, [selected]);
 
+  // Servings scaler, shared between the recipe detail drawer and Cook Mode
+  // so opening one from the other keeps the same scaled quantities. Reset
+  // to the recipe's default whenever a different recipe is displayed —
+  // keyed on displayedRecipe (not selected) so it doesn't flash-reset
+  // mid-close-animation.
+  const [servings, setServings] = React.useState(0);
+  React.useEffect(() => {
+    setServings(displayedRecipe?.servings ?? 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedRecipe?.id]);
+
+  // Cook Mode's open/closed state also lives on the URL — ?cook=1 — layered
+  // on top of the ?recipe=<id> drawer state, so the back button exits Cook
+  // Mode before closing the drawer underneath.
+  const cookMode = searchParams.get("cook") === "1" && !!selected;
+  const setCookMode = React.useCallback(
+    (on: boolean) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (on) params.set("cook", "1");
+      else params.delete("cook");
+      const query = params.toString();
+      const url = query ? `${pathname}?${query}` : pathname;
+      if (on) router.push(url, { scroll: false });
+      else router.replace(url, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   const {
     collections,
     createCollection,
@@ -85,6 +125,14 @@ export function LibraryShellProvider({
     toggleRecipeInCollection,
     addRecipeToCollection,
   } = useCollections(activeProfileId);
+
+  const {
+    shoppingList,
+    addRecipe: addRecipeToShoppingList,
+    removeRecipe: removeRecipeFromShoppingList,
+    clearList: clearShoppingList,
+    toggleChecked: toggleShoppingListChecked,
+  } = useShoppingList(activeProfileId);
 
   const setRecipeParam = React.useCallback(
     (id: string | null, opts?: { replace?: boolean }) => {
@@ -226,6 +274,10 @@ export function LibraryShellProvider({
     selected,
     setSelected,
     displayedRecipe,
+    servings,
+    setServings,
+    cookMode,
+    setCookMode,
     collections,
     createCollection,
     renameCollection,
@@ -233,6 +285,11 @@ export function LibraryShellProvider({
     deleteCollection,
     addRecipeToCollection,
     recipeCardActions,
+    shoppingList,
+    addRecipeToShoppingList,
+    removeRecipeFromShoppingList,
+    clearShoppingList,
+    toggleShoppingListChecked,
     profiles,
     activeProfileId,
     activeProfile,

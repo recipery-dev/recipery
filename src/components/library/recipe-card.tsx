@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, FolderPlus, Trash2 } from "lucide-react";
+import { Check, FolderPlus, ShoppingCart, Trash2 } from "lucide-react";
 import { RecipeTile, recipeTileClassName } from "./recipe-tile";
 import { RateDialog } from "./rate-dialog";
 import { getRecipeMenuActions } from "./recipe-menu-actions";
@@ -51,7 +51,8 @@ export function RecipeCard({ recipe, selected, onSelect, actions }: RecipeCardPr
   const { collections, onToggleCollection, onUpdateRecipe, onDeleteRecipe, onEditRecipe } = actions;
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
-  const { activeProfile } = useLibraryShell();
+  const { activeProfile, shoppingList, addRecipeToShoppingList, removeRecipeFromShoppingList } =
+    useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
 
   return (
@@ -123,6 +124,15 @@ export function RecipeCard({ recipe, selected, onSelect, actions }: RecipeCardPr
             )}
           </ContextMenuSubContent>
         </ContextMenuSub>
+        <ContextMenuCheckboxItem
+          checked={shoppingList.recipeIds.includes(recipe.id)}
+          onCheckedChange={(checked) =>
+            checked ? addRecipeToShoppingList(recipe.id) : removeRecipeFromShoppingList(recipe.id)
+          }
+        >
+          <ShoppingCart className="size-3.5" />
+          Add to shopping list
+        </ContextMenuCheckboxItem>
         <ContextMenuSeparator />
         {getRecipeMenuActions({
           recipe,

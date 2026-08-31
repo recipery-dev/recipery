@@ -1,12 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Clock, FolderPlus, MoreVertical, Heart, Printer, Trash2, Minus, Plus, X } from "lucide-react";
+import { ChefHat, Clock, FolderPlus, MoreVertical, Heart, Printer, ShoppingCart, Trash2, Minus, Plus, X } from "lucide-react";
 import { RateDialog } from "./rate-dialog";
 import { RecipePhoto } from "./recipe-photo";
+import { IngredientChecklist } from "./ingredient-checklist";
 import { getRecipeMenuActions } from "./recipe-menu-actions";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { RecipeActivity } from "@/app/api/recipes/[id]/activity/route";
 import {
@@ -31,8 +31,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { parseQuantityToNumber, scaleQuantity } from "@/lib/recipes/scale";
-import { convertToGrams, formatGrams } from "@/lib/recipes/convert";
 import { useLibraryShell } from "./library-shell-context";
 import { recipeStepImageUrl, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
 import type { Collection } from "@/lib/collections";
@@ -59,16 +57,24 @@ export function RecipeDetailPanel({
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
   const [checked, setChecked] = React.useState<Set<string>>(new Set());
-  const [servings, setServings] = React.useState(recipe.servings ?? 0);
-  const { activeProfile, settings } = useLibraryShell();
+  const {
+    activeProfile,
+    settings,
+    shoppingList,
+    addRecipeToShoppingList,
+    removeRecipeFromShoppingList,
+    servings,
+    setServings,
+    setCookMode,
+  } = useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
 
-  // A different recipe was opened — reset the checklist and servings scaler
-  // rather than carrying over the previous recipe's state.
+  // A different recipe was opened — reset the checklist rather than
+  // carrying over the previous recipe's state. (The servings scaler is
+  // shared context state, reset there instead — see library-shell-context.)
   React.useEffect(() => {
     setChecked(new Set());
-    setServings(recipe.servings ?? 0);
-  }, [recipe.id, recipe.servings]);
+  }, [recipe.id]);
 
   const factor = recipe.servings && servings ? servings / recipe.servings : 1;
   const totalMin =
@@ -162,7 +168,7 @@ export function RecipeDetailPanel({
             <button
               type="button"
               aria-label="Fewer servings"
-              onClick={() => setServings((s) => Math.max(1, s - 1))}
+              onClick={() => setServings(Math.max(1, servings - 1))}
               className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
             >
               <Minus className="size-3" />
@@ -173,13 +179,23 @@ export function RecipeDetailPanel({
             <button
               type="button"
               aria-label="More servings"
-              onClick={() => setServings((s) => s + 1)}
+              onClick={() => setServings(servings + 1)}
               className="flex size-6 items-center justify-center rounded-full text-muted-foreground hover:bg-background hover:text-foreground"
             >
               <Plus className="size-3" />
             </button>
           </div>
         )}
+
+        <Button
+          variant="secondary"
+          size="icon"
+          className="rounded-full"
+          aria-label="Cook mode"
+          onClick={() => setCookMode(true)}
+        >
+          <ChefHat className="size-4" />
+        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -214,6 +230,15 @@ export function RecipeDetailPanel({
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+            <DropdownMenuCheckboxItem
+              checked={shoppingList.recipeIds.includes(recipe.id)}
+              onCheckedChange={(checked) =>
+                checked ? addRecipeToShoppingList(recipe.id) : removeRecipeFromShoppingList(recipe.id)
+              }
+            >
+              <ShoppingCart className="size-3.5" />
+              Add to shopping list
+            </DropdownMenuCheckboxItem>
             <DropdownMenuSeparator />
             {getRecipeMenuActions({
               recipe,
@@ -253,38 +278,14 @@ export function RecipeDetailPanel({
       <div className="mt-5 flex flex-col gap-5">
         <div>
           <h3 className="font-heading text-sm font-bold">Ingredients</h3>
-          <ul className="mt-2.5 flex flex-col gap-2">
-            {recipe.ingredients.map((ingredient) => {
-              const isChecked = checked.has(ingredient.id);
-              const quantity = scaleQuantity(ingredient.quantity, factor);
-              const gramHint = (() => {
-                if (!settings.showIngredientGramHints) return null;
-                if (!ingredient.unit || ingredient.unit.trim().toLowerCase() === "g") return null;
-                const numericQty = ingredient.quantity ? parseQuantityToNumber(ingredient.quantity) : null;
-                if (numericQty === null) return null;
-                const grams = convertToGrams(numericQty * factor, ingredient.unit, ingredient.name);
-                return grams === null ? null : formatGrams(grams);
-              })();
-              return (
-                <li key={ingredient.id}>
-                  <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-                    <Checkbox
-                      checked={isChecked}
-                      onCheckedChange={() => toggleChecked(ingredient.id)}
-                      className="no-print mt-0.5"
-                    />
-                    <span className={cn(isChecked && "text-muted-foreground line-through")}>
-                      {quantity && <span className="font-medium">{quantity} </span>}
-                      {ingredient.unit && <span className="font-medium">{ingredient.unit} </span>}
-                      {ingredient.name}
-                      {ingredient.note && <span className="text-muted-foreground"> ({ingredient.note})</span>}
-                      {gramHint && <span className="text-muted-foreground"> ({gramHint})</span>}
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+          <IngredientChecklist
+            ingredients={recipe.ingredients}
+            factor={factor}
+            checked={checked}
+            onToggle={toggleChecked}
+            showGramHints={settings.showIngredientGramHints}
+            className="mt-2.5"
+          />
         </div>
 
         <div>

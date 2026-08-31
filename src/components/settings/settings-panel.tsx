@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { User, Moon, Loader2, Users, LayoutGrid, BarChart3 } from "lucide-react";
+import { User, Moon, Loader2, Users, LayoutGrid, BarChart3, Download } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ interface SettingsPanelProps {
   profile: PublicProfile;
 }
 
-type Category = "profile" | "stats" | "theme" | "profiles" | "library";
+type Category = "profile" | "stats" | "theme" | "profiles" | "library" | "backup";
 
 const CATEGORIES: {
   id: Category;
@@ -34,6 +34,7 @@ const CATEGORIES: {
   { id: "profiles", label: "Manage Profiles", icon: Users, adminOnly: true },
   { id: "theme", label: "Theme", icon: Moon },
   { id: "library", label: "Library", icon: LayoutGrid, adminOnly: true },
+  { id: "backup", label: "Backup", icon: Download, adminOnly: true },
 ];
 
 function SettingRow({
@@ -528,6 +529,30 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                   saveShowIngredientGramHints(checked);
                 }}
               />
+            </SettingRow>
+          </SectionCard>
+        )}
+
+        {category === "backup" && (
+          <SectionCard
+            title="Backup"
+            description="Download everything — recipes, photos, collections, profiles, and settings — as a zip file."
+          >
+            <SettingRow
+              title="Export your data"
+              description="A full backup of this install, for safekeeping or moving to a new server."
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => {
+                  window.location.href = "/api/export";
+                }}
+              >
+                <Download className="size-3.5" />
+                Download backup
+              </Button>
             </SettingRow>
           </SectionCard>
         )}
