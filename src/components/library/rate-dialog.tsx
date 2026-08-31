@@ -23,9 +23,9 @@ export function RateDialog({ recipe, open, onOpenChange, onRate }: RateDialogPro
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xs">
-        <DialogHeader>
+        <DialogHeader className="min-w-0">
           <DialogTitle>Rate this recipe</DialogTitle>
-          <DialogDescription className="truncate">{recipe.title}</DialogDescription>
+          <DialogDescription className="min-w-0 truncate">{recipe.title}</DialogDescription>
         </DialogHeader>
 
         <div className="flex items-center justify-center py-4">
