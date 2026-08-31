@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/recipery-dev/recipery/compare/v1.2.0...v1.3.0) (2026-08-31)
+
+
+### Features
+
+* Add ingredient gram-weight hints, library stats tab, and mobile drawer fixes ([90ca01b](https://github.com/recipery-dev/recipery/commit/90ca01bea1ef4323be8c81aaa79b2ab2a6e02df3))
+
 ## [1.2.0](https://github.com/recipery-dev/recipery/compare/v1.1.0...v1.2.0) (2026-08-30)
 
 
