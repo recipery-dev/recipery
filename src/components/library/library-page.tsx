@@ -5,13 +5,14 @@ import { RecentlyCooked } from "@/components/library/recently-cooked";
 import { RecipeGrid } from "@/components/library/recipe-grid";
 import { LibrarySortMenu } from "@/components/library/library-sort-menu";
 import { useLibraryShell } from "@/components/library/library-shell-context";
-import { useDocumentTitle } from "@/hooks/use-document-title";
 import { useRecipeSort } from "@/hooks/use-recipe-sort";
 import { DEMO_MODE } from "@/lib/demo-mode";
 import { sortRecipes } from "@/lib/recipes/sort";
 
+// No useDocumentTitle here — the homepage keeps the root metadata's branded
+// title (app/(app)/page.tsx) instead of the "<Section> - Recipery" pattern
+// every other page uses.
 export function LibraryPage() {
-  useDocumentTitle("Library");
   const { recipes, selected, setSelected, recipeCardActions } = useLibraryShell();
   const [sort, changeSort] = useRecipeSort("recipery:library-sort", "recent");
 
