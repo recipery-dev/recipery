@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/recipery-dev/recipery/compare/v1.12.0...v1.13.0) (2026-09-01)
+
+
+### Features
+
+* Add read-only demo mode support in settings panel and Makefile ([e185283](https://github.com/recipery-dev/recipery/commit/e185283bb741f21174dac487e73f0090202c8ab7))
+
 ## [1.12.0](https://github.com/recipery-dev/recipery/compare/v1.11.0...v1.12.0) (2026-09-01)
 
 
