@@ -3,7 +3,19 @@
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { User, Moon, Loader2, Users, LayoutGrid, BarChart3, Download } from "lucide-react";
+import {
+  User,
+  Moon,
+  Loader2,
+  Users,
+  LayoutGrid,
+  BarChart3,
+  Download,
+  Compass,
+  Plus,
+  Trash2,
+  GripVertical,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,14 +27,14 @@ import { DEMO_MODE } from "@/lib/demo-mode";
 import { ManageProfilesPanel } from "./manage-profiles-panel";
 import { StatsPanel } from "./stats-panel";
 import { PROFILE_COLORS, type PublicProfile } from "@/lib/profiles/types";
-import type { PublicAppSettings } from "@/lib/settings/types";
+import type { PublicAppSettings, RecipeDiscoverySource } from "@/lib/settings/types";
 
 interface SettingsPanelProps {
   settings: PublicAppSettings;
   profile: PublicProfile;
 }
 
-type Category = "profile" | "stats" | "theme" | "profiles" | "library" | "backup";
+type Category = "profile" | "stats" | "theme" | "profiles" | "library" | "discovery" | "backup";
 
 const CATEGORIES: {
   id: Category;
@@ -35,8 +47,13 @@ const CATEGORIES: {
   { id: "profiles", label: "Manage Profiles", icon: Users, adminOnly: true },
   { id: "theme", label: "Theme", icon: Moon },
   { id: "library", label: "Library", icon: LayoutGrid, adminOnly: true },
+  { id: "discovery", label: "Recipe Discovery", icon: Compass, adminOnly: true },
   { id: "backup", label: "Backup", icon: Download, adminOnly: true },
 ];
+
+function newDiscoverySource(): RecipeDiscoverySource {
+  return { id: crypto.randomUUID(), name: "", searchUrlTemplate: "" };
+}
 
 function SettingRow({
   title,
@@ -143,6 +160,28 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
   const [showIngredientGramHints, setShowIngredientGramHints] = React.useState(
     settings.showIngredientGramHints
   );
+
+  // recipe discovery
+  const [discoverySources, setDiscoverySources] = React.useState<RecipeDiscoverySource[]>(
+    settings.recipeDiscoverySources
+  );
+  const [savingDiscoverySources, setSavingDiscoverySources] = React.useState(false);
+  const discoverySourcesDirty =
+    JSON.stringify(discoverySources) !== JSON.stringify(settings.recipeDiscoverySources);
+  const [draggedSourceId, setDraggedSourceId] = React.useState<string | null>(null);
+  const [dragOverSourceId, setDragOverSourceId] = React.useState<string | null>(null);
+  const reorderDiscoverySources = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+    setDiscoverySources((prev) => {
+      const from = prev.findIndex((s) => s.id === draggedId);
+      const to = prev.findIndex((s) => s.id === targetId);
+      if (from < 0 || to < 0) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
 
   React.useEffect(() => {
     setName(profile.name);
@@ -265,6 +304,52 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
       router.refresh();
     } catch {
       toast.add({ title: "Couldn't save settings", type: "error" });
+    }
+  };
+
+  const saveDiscoverySources = async () => {
+    const cleaned = discoverySources
+      .map((s) => ({ id: s.id, name: s.name.trim(), searchUrlTemplate: s.searchUrlTemplate.trim() }))
+      .filter((s) => s.name || s.searchUrlTemplate);
+
+    for (const s of cleaned) {
+      if (!s.name) {
+        toast.add({ title: "Each source needs a name", type: "error" });
+        return;
+      }
+      if (!s.searchUrlTemplate.includes("{query}")) {
+        toast.add({
+          title: `"${s.name}" needs a search URL with a "{query}" placeholder`,
+          description: 'e.g. https://example.com/search?q={query}',
+          type: "error",
+        });
+        return;
+      }
+      try {
+        const parsed = new URL(s.searchUrlTemplate.replace("{query}", "x"));
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+      } catch {
+        toast.add({ title: `"${s.name}" doesn't have a valid http(s) URL`, type: "error" });
+        return;
+      }
+    }
+
+    setSavingDiscoverySources(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipeDiscoverySources: cleaned }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to save");
+      setDiscoverySources(cleaned);
+      toast.add({ title: "Saved", type: "success" });
+      router.refresh();
+    } catch (e) {
+      toast.add({ title: "Couldn't save recipe discovery sources", description: (e as Error).message, type: "error" });
+    } finally {
+      setSavingDiscoverySources(false);
     }
   };
 
@@ -531,6 +616,119 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                 }}
               />
             </SettingRow>
+          </SectionCard>
+        )}
+
+        {category === "discovery" && (
+          <SectionCard
+            title="Recipe Discovery"
+            description={'Sites "Find Similar" searches for recipes like the one you\'re viewing. The URL must include a "{query}" placeholder where the search term goes.'}
+            footer={
+              <div className="flex w-full items-center justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setDiscoverySources((prev) => [...prev, newDiscoverySource()])}
+                >
+                  <Plus className="size-3.5" />
+                  Add source
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={!discoverySourcesDirty || savingDiscoverySources}
+                  onClick={saveDiscoverySources}
+                >
+                  {savingDiscoverySources && <Loader2 className="size-3.5 animate-spin" />}
+                  Save changes
+                </Button>
+              </div>
+            }
+          >
+            {discoverySources.length === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">
+                No sources yet — add one below (e.g. NYT Cooking or your own favorite recipe site).
+              </p>
+            ) : (
+              <div className="flex flex-col">
+                {discoverySources.map((source, index) => {
+                  const isDropTarget =
+                    dragOverSourceId === source.id && !!draggedSourceId && draggedSourceId !== source.id;
+                  return (
+                    <div
+                      key={source.id}
+                      onDragOver={(e) => {
+                        if (draggedSourceId) e.preventDefault();
+                      }}
+                      onDragEnter={() => {
+                        if (draggedSourceId && draggedSourceId !== source.id) setDragOverSourceId(source.id);
+                      }}
+                      onDragLeave={(e) => {
+                        // dragenter/dragleave fire when moving onto a child too —
+                        // only clear once the pointer actually left the row.
+                        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                        setDragOverSourceId((prev) => (prev === source.id ? null : prev));
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedSourceId) reorderDiscoverySources(draggedSourceId, source.id);
+                        setDraggedSourceId(null);
+                        setDragOverSourceId(null);
+                      }}
+                      className={cn(
+                        "flex flex-col gap-2 py-4 sm:flex-row sm:items-center",
+                        index > 0 && "border-t transition-colors duration-150",
+                        index > 0 && (isDropTarget ? "border-t-2 border-ring" : "border-border/60"),
+                        draggedSourceId === source.id && "opacity-40"
+                      )}
+                    >
+                      <div
+                        draggable
+                        onDragStart={() => setDraggedSourceId(source.id)}
+                        onDragEnd={() => {
+                          setDraggedSourceId(null);
+                          setDragOverSourceId(null);
+                        }}
+                        title="Drag to reorder"
+                        className="hidden shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing sm:flex"
+                      >
+                        <GripVertical className="size-4" />
+                      </div>
+                      <Input
+                        value={source.name}
+                        onChange={(e) =>
+                          setDiscoverySources((prev) =>
+                            prev.map((s) => (s.id === source.id ? { ...s, name: e.target.value } : s))
+                          )
+                        }
+                        placeholder="Name, e.g. NYT Cooking"
+                        className="sm:w-40"
+                      />
+                      <Input
+                        value={source.searchUrlTemplate}
+                        onChange={(e) =>
+                          setDiscoverySources((prev) =>
+                            prev.map((s) => (s.id === source.id ? { ...s, searchUrlTemplate: e.target.value } : s))
+                          )
+                        }
+                        placeholder="https://example.com/search?q={query}"
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDiscoverySources((prev) => prev.filter((s) => s.id !== source.id))}
+                        aria-label="Remove source"
+                        className="flex size-8 shrink-0 items-center justify-center self-end rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive sm:self-auto"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </SectionCard>
         )}
 

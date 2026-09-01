@@ -58,6 +58,38 @@ export async function PATCH(request: Request) {
     patch.showIngredientGramHints = body.showIngredientGramHints;
   }
 
+  if (Array.isArray(body.recipeDiscoverySources)) {
+    const sources = body.recipeDiscoverySources;
+    const valid = sources.every((s) => {
+      if (typeof s !== "object" || s === null) return false;
+      const { id, name, searchUrlTemplate } = s as unknown as Record<string, unknown>;
+      if (typeof id !== "string" || !id.trim()) return false;
+      if (typeof name !== "string" || !name.trim()) return false;
+      if (typeof searchUrlTemplate !== "string" || !searchUrlTemplate.includes("{query}")) return false;
+      try {
+        const parsed = new URL(searchUrlTemplate.replace("{query}", "x"));
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+      } catch {
+        return false;
+      }
+      return true;
+    });
+    if (!valid) {
+      return NextResponse.json(
+        {
+          error:
+            "Each recipe discovery source needs a name and a valid http(s) URL containing a \"{query}\" placeholder",
+        },
+        { status: 400 }
+      );
+    }
+    patch.recipeDiscoverySources = sources.map((s) => ({
+      id: s.id.trim(),
+      name: s.name.trim(),
+      searchUrlTemplate: s.searchUrlTemplate.trim(),
+    }));
+  }
+
   const settings = await updateSettings(patch);
   return NextResponse.json({ settings: toPublicSettings(settings) });
 }

@@ -14,6 +14,7 @@ export interface SettingsPatch {
   searchResultLimit?: number;
   imageMaxSizeMb?: number;
   showIngredientGramHints?: boolean;
+  recipeDiscoverySources?: AppSettings["recipeDiscoverySources"];
 }
 
 export async function updateSettings(patch: SettingsPatch): Promise<AppSettings> {

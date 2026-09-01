@@ -55,6 +55,8 @@ interface LibraryShellContextValue {
   openEditRecipe: (recipe: RecipeRecord) => void;
   closeRecipeForm: () => void;
   handleRecipeSaved: (record: RecipeRecord) => void;
+  discoverOpen: boolean;
+  setDiscoverOpen: (open: boolean) => void;
 }
 
 const LibraryShellContext =
@@ -286,6 +288,8 @@ export function LibraryShellProvider({
   );
   const closeRecipeForm = React.useCallback(() => setFormDrawer(null), []);
 
+  const [discoverOpen, setDiscoverOpen] = React.useState(false);
+
   const handleRecipeSaved = (record: RecipeRecord) => {
     if (formDrawer?.mode === "create") {
       handleCreated(record);
@@ -339,6 +343,8 @@ export function LibraryShellProvider({
     openEditRecipe,
     closeRecipeForm,
     handleRecipeSaved,
+    discoverOpen,
+    setDiscoverOpen,
   };
 
   return (

@@ -6,6 +6,7 @@ import { AppHeader } from "./app-header";
 import { DemoBanner } from "./demo-banner";
 import { RecipePreviewDrawer } from "./recipe-preview-drawer";
 import { RecipeFormDrawer } from "./recipe-form-drawer";
+import { DiscoverDrawer } from "./discover-drawer";
 import { CookMode } from "./cook-mode";
 import { useLibraryShell } from "./library-shell-context";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -17,8 +18,17 @@ export function AppShell({
   children: React.ReactNode;
   defaultSidebarOpen: boolean;
 }) {
-  const { formDrawer, closeRecipeForm, handleRecipeSaved, selected, displayedRecipe, cookMode, setCookMode } =
-    useLibraryShell();
+  const {
+    formDrawer,
+    closeRecipeForm,
+    handleRecipeSaved,
+    selected,
+    displayedRecipe,
+    cookMode,
+    setCookMode,
+    discoverOpen,
+    setDiscoverOpen,
+  } = useLibraryShell();
   // Editing from an open preview renders its own nested RecipeFormDrawer
   // (see RecipePreviewDrawer) so it stacks on top of the preview instead of
   // this top-level instance, which only handles create and edit-without-a-
@@ -51,6 +61,7 @@ export function AppShell({
         onSaved={handleRecipeSaved}
       />
       <CookMode recipe={displayedRecipe} open={cookMode} onClose={() => setCookMode(false)} />
+      <DiscoverDrawer open={discoverOpen} onOpenChange={setDiscoverOpen} />
     </SidebarProvider>
   );
 }

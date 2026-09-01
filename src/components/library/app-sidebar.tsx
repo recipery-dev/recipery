@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LibraryBig,
+  Compass,
   Plus,
   MoreVertical,
   Pencil,
@@ -59,10 +60,8 @@ interface NavItem {
   icon: React.ElementType;
 }
 
-const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Library", icon: LibraryBig },
-  { href: "/shopping-list", label: "Shopping List", icon: ShoppingCart },
-];
+const LIBRARY_ITEM: NavItem = { href: "/", label: "Library", icon: LibraryBig };
+const NAV_ITEMS: NavItem[] = [{ href: "/shopping-list", label: "Shopping List", icon: ShoppingCart }];
 
 const FOOTER_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings, external: false },
@@ -87,6 +86,7 @@ export function AppSidebar() {
     recolorCollection,
     deleteCollection,
     addRecipeToCollection,
+    setDiscoverOpen,
   } = useLibraryShell();
 
   const [confirmDelete, setConfirmDelete] = React.useState<Collection | null>(
@@ -170,6 +170,22 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu className="gap-1">
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname === LIBRARY_ITEM.href}
+                tooltip={LIBRARY_ITEM.label}
+                render={<Link href={LIBRARY_ITEM.href} />}
+              >
+                <LIBRARY_ITEM.icon />
+                <span>{LIBRARY_ITEM.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton tooltip="Discover" onClick={() => setDiscoverOpen(true)}>
+                <Compass />
+                <span>Discover</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             {NAV_ITEMS.map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton

@@ -161,7 +161,7 @@ async function scrapeYouTubeRecipe(url: string): Promise<ScrapedRecipe> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type JsonLdNode = Record<string, any>;
 
-function scrapeUserAgent(): string {
+export function scrapeUserAgent(): string {
   const contact = process.env.RECIPERY_CONTACT;
   return `Recipery/1.0 (self-hosted recipe library${contact ? `; ${contact}` : ""})`;
 }
