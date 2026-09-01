@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/recipery-dev/recipery/compare/v1.11.0...v1.12.0) (2026-09-01)
+
+
+### Features
+
+* Add demo banner component for read-only mode indication ([d004ba5](https://github.com/recipery-dev/recipery/commit/d004ba5d195f758715bc489ab4bd3d302be4ebdb))
+
 ## [1.11.0](https://github.com/recipery-dev/recipery/compare/v1.10.0...v1.11.0) (2026-09-01)
 
 
