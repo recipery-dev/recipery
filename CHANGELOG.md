@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.0](https://github.com/recipery-dev/recipery/compare/v1.10.0...v1.11.0) (2026-09-01)
+
+
+### Features
+
+* Add collapsible component and integrate video URL handling in recipe forms ([45ce512](https://github.com/recipery-dev/recipery/commit/45ce51251e59369299fb9b60a16809039e4bac67))
+* Enhance recipe card to display video availability indicator ([5df9f85](https://github.com/recipery-dev/recipery/commit/5df9f85953604d6c113a26fb7e78eb84e20e9a6a))
+
 ## [1.10.0](https://github.com/recipery-dev/recipery/compare/v1.9.0...v1.10.0) (2026-08-31)
 
 
