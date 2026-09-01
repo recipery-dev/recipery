@@ -35,26 +35,125 @@ interface YouTubeOEmbed {
   thumbnail_url?: string;
 }
 
-/** YouTube pages don't carry schema.org Recipe markup, so there's nothing to
- * scrape for ingredients/steps — just pull the title, channel, and thumbnail
- * from the public oEmbed endpoint and link the video itself. The rest is
- * left for the person to fill in from what they see in the video. */
+/** Finds `marker` in `html` and scans forward from there for the JSON value
+ * that follows, tracking string/escape state so braces inside string
+ * literals (URLs, apostrophes in a video description, etc.) don't throw off
+ * the brace count. A plain non-greedy regex like `\{.*?\}` breaks the
+ * instant a description contains its own "};" — this doesn't. */
+function extractBalancedJson(html: string, marker: string): string | null {
+  const start = html.indexOf(marker);
+  if (start === -1) return null;
+  const objStart = start + marker.length;
+  if (html[objStart] !== "{") return null;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = objStart; i < html.length; i++) {
+    const char = html[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') inString = false;
+      continue;
+    }
+    if (char === '"') inString = true;
+    else if (char === "{") depth++;
+    else if (char === "}") {
+      depth--;
+      if (depth === 0) return html.slice(objStart, i + 1);
+    }
+  }
+  return null;
+}
+
+/** Best-effort read of the video's full description from the watch page —
+ * the oEmbed endpoint doesn't include it. Failure here (blocked request,
+ * YouTube's markup shifting, a consent interstitial) just means no
+ * description text to search for a recipe in, not a failed import. */
+async function fetchYouTubeDescription(url: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": scrapeUserAgent(),
+        "Accept-Language": "en-US,en;q=0.9",
+        // Skips the cookie-consent interstitial some regions get redirected
+        // to instead of the actual watch page.
+        Cookie: "CONSENT=YES+1",
+      },
+    });
+    if (!res.ok) return undefined;
+    const html = await res.text();
+    const json = extractBalancedJson(html, "var ytInitialPlayerResponse = ");
+    if (!json) return undefined;
+    const data = JSON.parse(json) as { videoDetails?: { shortDescription?: string } };
+    return data.videoDetails?.shortDescription;
+  } catch {
+    return undefined;
+  }
+}
+
+const TIMESTAMP_LINE = /^\d{1,2}:\d{2}(?::\d{2})?\b/;
+const URL_LINE = /^https?:\/\//i;
+const STEP_LINE = /^(?:step\s*)?\d+[.):]\s+/i;
+
+/** Cooking-channel descriptions often list ingredients (and sometimes
+ * numbered steps) alongside timestamps, links, and promo text with no
+ * consistent "Ingredients:" heading to anchor on — so instead of looking
+ * for a heading, this just classifies the description line by line, reusing
+ * the same quantity/unit parsing as the schema.org scraper. Order matters:
+ * a numbered step ("1. Preheat the oven") would otherwise also match the
+ * ingredient quantity pattern, so the step check runs first and requires
+ * punctuation right after the number ("1." / "1)") to tell it apart from an
+ * ingredient quantity ("1 cup", "500g").  */
+function parseDescriptionForRecipe(description: string): { ingredients: ScrapedIngredient[]; steps: string[] } {
+  const ingredients: ScrapedIngredient[] = [];
+  const steps: string[] = [];
+
+  for (const raw of description.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || TIMESTAMP_LINE.test(line) || URL_LINE.test(line)) continue;
+
+    const stepMatch = line.match(STEP_LINE);
+    if (stepMatch) {
+      steps.push(line.slice(stepMatch[0].length).trim());
+      continue;
+    }
+
+    if (QUANTITY_PATTERN.test(line)) {
+      ingredients.push(splitIngredientLine(line));
+    }
+  }
+
+  return { ingredients, steps };
+}
+
+/** YouTube pages don't carry schema.org Recipe markup, so the oEmbed
+ * endpoint (title, channel, thumbnail) is the only reliable source — but
+ * cooking channels often paste the recipe itself into the description, so
+ * that's scanned as a best-effort bonus rather than relied on. */
 async function scrapeYouTubeRecipe(url: string): Promise<ScrapedRecipe> {
   const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
   const res = await fetch(oembedUrl, { headers: { "User-Agent": scrapeUserAgent() } });
   if (!res.ok) throw new Error("Couldn't find that YouTube video — check the link.");
   const data = (await res.json()) as YouTubeOEmbed;
 
+  const description = await fetchYouTubeDescription(url);
+  const found = description ? parseDescriptionForRecipe(description) : { ingredients: [], steps: [] };
+
   return {
     title: data.title?.trim() || "Imported Recipe",
     source: data.author_name,
     sourceUrl: url,
     videoUrl: url,
-    description: "Imported from YouTube — add ingredients and steps from the video.",
+    description:
+      found.ingredients.length > 0 || found.steps.length > 0
+        ? "Imported from YouTube — double-check the ingredients and steps pulled from the video description."
+        : "Imported from YouTube — add ingredients and steps from the video.",
     imageUrl: data.thumbnail_url,
     tags: [],
-    ingredients: [],
-    steps: [],
+    ingredients: found.ingredients,
+    steps: found.steps,
   };
 }
 
