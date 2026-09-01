@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useLibraryShell } from "@/components/library/library-shell-context";
+import { DEMO_MODE } from "@/lib/demo-mode";
 import { ManageProfilesPanel } from "./manage-profiles-panel";
 import { StatsPanel } from "./stats-panel";
 import { PROFILE_COLORS, type PublicProfile } from "@/lib/profiles/types";
@@ -540,12 +541,17 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
           >
             <SettingRow
               title="Export your data"
-              description="A full backup of this install, for safekeeping or moving to a new server."
+              description={
+                DEMO_MODE
+                  ? "Backups are disabled on this read-only demo."
+                  : "A full backup of this install, for safekeeping or moving to a new server."
+              }
             >
               <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
+                disabled={DEMO_MODE}
                 onClick={() => {
                   window.location.href = "/api/export";
                 }}
