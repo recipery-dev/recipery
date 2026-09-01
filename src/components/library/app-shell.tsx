@@ -3,6 +3,7 @@
 import * as React from "react";
 import { AppSidebar } from "./app-sidebar";
 import { AppHeader } from "./app-header";
+import { DemoBanner } from "./demo-banner";
 import { RecipePreviewDrawer } from "./recipe-preview-drawer";
 import { RecipeFormDrawer } from "./recipe-form-drawer";
 import { CookMode } from "./cook-mode";
@@ -29,6 +30,7 @@ export function AppShell({
       <AppSidebar />
 
       <SidebarInset className="h-dvh overflow-hidden">
+        <DemoBanner />
         <AppHeader />
 
         <div className="flex flex-1 overflow-hidden md:pb-8 md:pl-8">
