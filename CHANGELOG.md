@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.0](https://github.com/recipery-dev/recipery/compare/v1.14.0...v1.15.0) (2026-09-01)
+
+
+### Features
+
+* Add script to import sample recipes from BBC Good Food sitemap ([da11968](https://github.com/recipery-dev/recipery/commit/da11968b89d5b0d3b159da468167f240e11694b1))
+* Implement recipe discovery feature with source management and search functionality ([1b612e7](https://github.com/recipery-dev/recipery/commit/1b612e7476386e511b1b8dea66867478b888dcb3))
+
 ## [1.14.0](https://github.com/recipery-dev/recipery/compare/v1.13.0...v1.14.0) (2026-09-01)
 
 
