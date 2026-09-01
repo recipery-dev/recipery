@@ -12,7 +12,8 @@
     "preview:cloudflare": "sh scripts/build-cloudflare.sh && opennextjs-cloudflare preview",
     "deploy:cloudflare": "sh scripts/build-cloudflare.sh && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "import:sample-recipes": "node scripts/import-sample-recipes.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1118.0",

@@ -1,4 +1,4 @@
-.PHONY: dev dev-demo build start lint install docker-up docker-down docker-logs clean cf-deploy cf-deploy-unlocked cf-build cf-preview
+.PHONY: dev dev-demo build start lint install docker-up docker-down docker-logs clean cf-deploy cf-deploy-unlocked cf-build cf-preview import-sample-recipes
 
 dev: ## Run the Next.js dev server (clears the .next cache first to avoid stale UI)
 	rm -rf .next
@@ -19,6 +19,9 @@ lint: ## Lint the project
 
 install: ## Install dependencies
 	pnpm install
+
+import-sample-recipes: ## Seed the local library with sample recipes from BBC Good Food (use COUNT=n to override, default 60)
+	pnpm import:sample-recipes -- --count=$(or $(COUNT),60)
 
 docker-up: ## Rebuild and start app + MinIO via docker compose
 	docker compose up --build
