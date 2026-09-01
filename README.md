@@ -56,6 +56,10 @@ Full docs are at [docs.recipery.dev](https://docs.recipery.dev).
 - Enter recipes manually or import them from a URL — pulls ingredients,
   steps, photos, timing, and the source site's name from the page's own
   recipe data
+- Import from a YouTube link too — pulls in the title, thumbnail, and video,
+  plus a best-effort read of any ingredients/steps in the description
+- Attach a video to any recipe, YouTube or otherwise — add it on import,
+  or set/change it later from Edit
 - Ingredients with quantities, units, and a servings scaler that recalculates
   amounts on the fly
 - Step-by-step instructions with per-step photos, drag-to-reorder, and a
