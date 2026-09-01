@@ -76,6 +76,7 @@ export async function POST(request: Request) {
     title: scraped.title,
     source: scraped.source,
     sourceUrl: scraped.sourceUrl,
+    videoUrl: scraped.videoUrl,
     description: scraped.description,
     servings: scraped.servings,
     prepMinutes: scraped.prepMinutes,

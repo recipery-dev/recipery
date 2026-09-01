@@ -25,6 +25,8 @@ export interface RecipeRecord {
   source?: string;
   /** set when the recipe was created via URL import */
   sourceUrl?: string;
+  /** link to a video for this recipe (e.g. a YouTube video) */
+  videoUrl?: string;
   description?: string;
   servings?: number;
   prepMinutes?: number;

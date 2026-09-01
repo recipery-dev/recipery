@@ -17,6 +17,17 @@ function stringField(form: FormData, key: string): string | undefined {
   return typeof raw === "string" && raw.trim() ? raw.trim() : undefined;
 }
 
+function urlField(form: FormData, key: string): string | undefined {
+  const value = stringField(form, key);
+  if (!value) return undefined;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? value : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -99,6 +110,7 @@ export async function POST(
     title,
     source: stringField(form, "source"),
     sourceUrl: stringField(form, "sourceUrl") ?? existing.sourceUrl,
+    videoUrl: urlField(form, "videoUrl"),
     description: stringField(form, "description"),
     servings: numberField(form, "servings"),
     prepMinutes: numberField(form, "prepMinutes"),

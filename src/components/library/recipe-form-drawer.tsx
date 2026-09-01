@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { ImageUp, Loader2, Plus, Trash2, ChevronDown, X } from "lucide-react";
 import { recipeCoverUrl, recipeStepImageUrl, type RecipeDifficulty, type RecipeRecord } from "@/lib/recipes/types";
@@ -116,6 +117,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
 
   const [title, setTitle] = React.useState(recipe?.title ?? "");
   const [source, setSource] = React.useState(recipe?.source ?? "");
+  const [videoUrl, setVideoUrl] = React.useState(recipe?.videoUrl ?? "");
   const [description, setDescription] = React.useState(recipe?.description ?? "");
   const [servings, setServings] = React.useState(recipe?.servings ? String(recipe.servings) : "");
   const [prepMinutes, setPrepMinutes] = React.useState(recipe?.prepMinutes ? String(recipe.prepMinutes) : "");
@@ -125,6 +127,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
   const [tags, setTags] = React.useState(recipe?.tags.join(", ") ?? "");
   const [ingredients, setIngredients] = React.useState<IngredientRow[]>(initial.ingredients);
   const [steps, setSteps] = React.useState<StepRow[]>(initial.steps);
+  const [detailsOpen, setDetailsOpen] = React.useState(false);
 
   const [coverFile, setCoverFile] = React.useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = React.useState<string | null>(null);
@@ -142,6 +145,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
     const fresh = fromRecord(recipe);
     setTitle(recipe?.title ?? "");
     setSource(recipe?.source ?? "");
+    setVideoUrl(recipe?.videoUrl ?? "");
     setDescription(recipe?.description ?? "");
     setServings(recipe?.servings ? String(recipe.servings) : "");
     setPrepMinutes(recipe?.prepMinutes ? String(recipe.prepMinutes) : "");
@@ -151,6 +155,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
     setTags(recipe?.tags.join(", ") ?? "");
     setIngredients(fresh.ingredients);
     setSteps(fresh.steps);
+    setDetailsOpen(false);
     setCoverFile(null);
     requestAnimationFrame(() => titleInputRef.current?.focus());
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -226,7 +231,18 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
     updateStep(id, { newFile: file, newPreviewUrl: url });
   };
 
-  const isValid = title.trim().length > 0;
+  const videoUrlValid = React.useMemo(() => {
+    const trimmed = videoUrl.trim();
+    if (!trimmed) return true;
+    try {
+      const parsed = new URL(trimmed);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }, [videoUrl]);
+
+  const isValid = title.trim().length > 0 && videoUrlValid;
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -236,6 +252,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       form.set("title", title.trim());
       if (source.trim()) form.set("source", source.trim());
       if (recipe?.sourceUrl) form.set("sourceUrl", recipe.sourceUrl);
+      if (videoUrl.trim()) form.set("videoUrl", videoUrl.trim());
       if (description.trim()) form.set("description", description.trim());
       if (servings.trim()) form.set("servings", servings.trim());
       if (prepMinutes.trim()) form.set("prepMinutes", prepMinutes.trim());
@@ -413,43 +430,6 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="recipe-source" className="text-sm font-medium">
-                  Source
-                </label>
-                <Input
-                  id="recipe-source"
-                  value={source}
-                  onChange={(e) => setSource(e.target.value)}
-                  placeholder="e.g. Grandma, or a site name"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="recipe-cuisine" className="text-sm font-medium">
-                  Cuisine
-                </label>
-                <Input
-                  id="recipe-cuisine"
-                  value={cuisine}
-                  onChange={(e) => setCuisine(e.target.value)}
-                  placeholder="e.g. Italian"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label htmlFor="recipe-tags" className="text-sm font-medium">
-                Tags
-              </label>
-              <Input
-                id="recipe-tags"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="Comma-separated, e.g. weeknight, vegetarian"
-              />
-            </div>
-
             <div className="flex flex-col gap-2">
               <label htmlFor="recipe-description" className="text-sm font-medium">
                 Description
@@ -462,6 +442,67 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
                 rows={3}
               />
             </div>
+
+            <Collapsible open={detailsOpen || !videoUrlValid} onOpenChange={setDetailsOpen}>
+              <CollapsibleTrigger>Additional details</CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="mx-1 flex flex-col gap-6 px-1 pt-4 pb-1">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="recipe-source" className="text-sm font-medium">
+                        Source
+                      </label>
+                      <Input
+                        id="recipe-source"
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        placeholder="e.g. Grandma, or a site name"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="recipe-cuisine" className="text-sm font-medium">
+                        Cuisine
+                      </label>
+                      <Input
+                        id="recipe-cuisine"
+                        value={cuisine}
+                        onChange={(e) => setCuisine(e.target.value)}
+                        placeholder="e.g. Italian"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="recipe-video" className="text-sm font-medium">
+                      Video URL
+                    </label>
+                    <Input
+                      id="recipe-video"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="e.g. a YouTube link"
+                      aria-invalid={!videoUrlValid}
+                      className={cn(videoUrlValid || "border-destructive focus-visible:ring-destructive/50")}
+                    />
+                    {!videoUrlValid && (
+                      <p className="text-xs text-destructive">That doesn&rsquo;t look like a valid URL</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="recipe-tags" className="text-sm font-medium">
+                      Tags
+                    </label>
+                    <Input
+                      id="recipe-tags"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="Comma-separated, e.g. weeknight, vegetarian"
+                    />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">

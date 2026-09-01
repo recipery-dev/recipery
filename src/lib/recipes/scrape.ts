@@ -5,6 +5,8 @@
  * "application/ld+json"> blocks and a JSON.parse.
  */
 
+import { isYouTubeUrl } from "./video";
+
 export interface ScrapedIngredient {
   quantity?: string;
   unit?: string;
@@ -15,6 +17,7 @@ export interface ScrapedRecipe {
   title: string;
   source?: string;
   sourceUrl: string;
+  videoUrl?: string;
   description?: string;
   imageUrl?: string;
   servings?: number;
@@ -24,6 +27,35 @@ export interface ScrapedRecipe {
   tags: string[];
   ingredients: ScrapedIngredient[];
   steps: string[];
+}
+
+interface YouTubeOEmbed {
+  title?: string;
+  author_name?: string;
+  thumbnail_url?: string;
+}
+
+/** YouTube pages don't carry schema.org Recipe markup, so there's nothing to
+ * scrape for ingredients/steps — just pull the title, channel, and thumbnail
+ * from the public oEmbed endpoint and link the video itself. The rest is
+ * left for the person to fill in from what they see in the video. */
+async function scrapeYouTubeRecipe(url: string): Promise<ScrapedRecipe> {
+  const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+  const res = await fetch(oembedUrl, { headers: { "User-Agent": scrapeUserAgent() } });
+  if (!res.ok) throw new Error("Couldn't find that YouTube video — check the link.");
+  const data = (await res.json()) as YouTubeOEmbed;
+
+  return {
+    title: data.title?.trim() || "Imported Recipe",
+    source: data.author_name,
+    sourceUrl: url,
+    videoUrl: url,
+    description: "Imported from YouTube — add ingredients and steps from the video.",
+    imageUrl: data.thumbnail_url,
+    tags: [],
+    ingredients: [],
+    steps: [],
+  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,6 +279,8 @@ function flattenInstructions(node: unknown): string[] {
 }
 
 export async function scrapeRecipeFromUrl(url: string): Promise<ScrapedRecipe> {
+  if (isYouTubeUrl(url)) return scrapeYouTubeRecipe(url);
+
   const res = await fetch(url, { headers: { "User-Agent": scrapeUserAgent() } });
   if (!res.ok) throw new Error(`Couldn't fetch that page (HTTP ${res.status})`);
   const html = await res.text();

@@ -46,7 +46,8 @@ export function ImportRecipeDialog({ open, onOpenChange }: ImportRecipeDialogPro
           <DialogTitle>Import a recipe</DialogTitle>
           <DialogDescription>
             Paste a link to a recipe page — Recipery reads the ingredients, steps, and photo most
-            sites already publish for search engines.
+            sites already publish for search engines. Paste a YouTube link to pull in the title
+            and thumbnail with the video attached — add ingredients and steps yourself after.
           </DialogDescription>
         </DialogHeader>
 

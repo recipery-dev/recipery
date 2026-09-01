@@ -12,6 +12,7 @@ import {
   Trash2,
   Minus,
   Plus,
+  Play,
   X,
 } from "lucide-react";
 import { RateDialog } from "./rate-dialog";
@@ -54,6 +55,7 @@ import {
   type Recipe,
   type RecipeRecord,
 } from "@/lib/recipes/types";
+import { youtubeEmbedUrl } from "@/lib/recipes/video";
 import type { Collection } from "@/lib/collections";
 
 interface RecipeDetailPanelProps {
@@ -121,6 +123,8 @@ export function RecipeDetailPanel({
       cancelled = true;
     };
   }, [recipe.id]);
+
+  const videoEmbedUrl = recipe.videoUrl ? youtubeEmbedUrl(recipe.videoUrl) : null;
 
   const toggleChecked = (id: string) => {
     setChecked((prev) => {
@@ -350,6 +354,29 @@ export function RecipeDetailPanel({
             {recipe.description}
           </p>
         )}
+
+        {recipe.videoUrl &&
+          (videoEmbedUrl ? (
+            <div className="no-print mt-4 aspect-video w-full overflow-hidden rounded-xl border border-border">
+              <iframe
+                src={videoEmbedUrl}
+                title={recipe.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="size-full"
+              />
+            </div>
+          ) : (
+            <a
+              href={recipe.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-print mt-4 flex items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            >
+              <Play className="size-4 shrink-0" />
+              Watch the video
+            </a>
+          ))}
 
         <div className="mt-5 flex flex-col gap-5">
           <div>
