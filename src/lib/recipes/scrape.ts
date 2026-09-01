@@ -6,6 +6,7 @@
  */
 
 import { isYouTubeUrl } from "./video";
+import { INGREDIENT_QUANTITY_PATTERN, parseIngredientLine } from "./ingredient-text";
 
 export interface ScrapedIngredient {
   quantity?: string;
@@ -40,7 +41,7 @@ interface YouTubeOEmbed {
  * literals (URLs, apostrophes in a video description, etc.) don't throw off
  * the brace count. A plain non-greedy regex like `\{.*?\}` breaks the
  * instant a description contains its own "};" — this doesn't. */
-function extractBalancedJson(html: string, marker: string): string | null {
+export function extractBalancedJson(html: string, marker: string): string | null {
   const start = html.indexOf(marker);
   if (start === -1) return null;
   const objStart = start + marker.length;
@@ -106,7 +107,7 @@ const STEP_LINE = /^(?:step\s*)?\d+[.):]\s+/i;
  * ingredient quantity pattern, so the step check runs first and requires
  * punctuation right after the number ("1." / "1)") to tell it apart from an
  * ingredient quantity ("1 cup", "500g").  */
-function parseDescriptionForRecipe(description: string): { ingredients: ScrapedIngredient[]; steps: string[] } {
+export function parseDescriptionForRecipe(description: string): { ingredients: ScrapedIngredient[]; steps: string[] } {
   const ingredients: ScrapedIngredient[] = [];
   const steps: string[] = [];
 
@@ -120,8 +121,8 @@ function parseDescriptionForRecipe(description: string): { ingredients: ScrapedI
       continue;
     }
 
-    if (QUANTITY_PATTERN.test(line)) {
-      ingredients.push(splitIngredientLine(line));
+    if (INGREDIENT_QUANTITY_PATTERN.test(line)) {
+      ingredients.push(parseIngredientLine(line));
     }
   }
 
@@ -293,68 +294,9 @@ function parseYield(recipeYield: unknown): number | undefined {
   return match ? Number(match[0]) : undefined;
 }
 
-// Matches a unit at the start of the remaining text and normalizes it to the
-// same short form the edit form's unit dropdown uses (UNIT_OPTIONS in
-// recipe-form-drawer.tsx), so "Tablespoon", "TABLESPOON", "Table Spoon", and
-// "tbsp." all land as the recognized "tbsp" option instead of falling back
-// to free text. Order matters: longer/more specific patterns are listed
-// before shorter ones they could otherwise be mistaken for a prefix of
-// (e.g. "lb" must be tried before the bare "l" abbreviation, or "l\.?" would
-// match just the "l" in "lb" and leave a stray "b" in the ingredient name).
-// `(?=\s|$)` (rather than `\b`) is the boundary check so an optional
-// trailing period — "tbsp." — is consumed cleanly instead of being left
-// dangling in front of the ingredient name.
-const UNIT_ALIASES: { pattern: RegExp; canonical: string }[] = [
-  { pattern: /^cups?(?=\s|$)/i, canonical: "cup" },
-  { pattern: /^(?:teaspoons?|tea\s*spoons?|tsps?\.?)(?=\s|$)/i, canonical: "tsp" },
-  { pattern: /^(?:tablespoons?|table\s*spoons?|tbsps?\.?|tbls?\.?\s*spoons?)(?=\s|$)/i, canonical: "tbsp" },
-  { pattern: /^(?:fluid\s*ounces?|fl\.?\s*oz\.?)(?=\s|$)/i, canonical: "fl oz" },
-  { pattern: /^(?:ounces?|oz\.?)(?=\s|$)/i, canonical: "oz" },
-  { pattern: /^(?:pounds?|lbs?\.?)(?=\s|$)/i, canonical: "lb" },
-  { pattern: /^(?:pints?|pts?\.?)(?=\s|$)/i, canonical: "pt" },
-  { pattern: /^(?:quarts?|qts?\.?)(?=\s|$)/i, canonical: "qt" },
-  { pattern: /^(?:gallons?|gal\.?)(?=\s|$)/i, canonical: "gal" },
-  { pattern: /^(?:kilograms?|kgs?\.?)(?=\s|$)/i, canonical: "kg" },
-  { pattern: /^(?:milliliters?|millilitres?|mls?\.?)(?=\s|$)/i, canonical: "ml" },
-  { pattern: /^(?:liters?|litres?)(?=\s|$)/i, canonical: "l" },
-  { pattern: /^(?:grams?|gr\.?)(?=\s|$)/i, canonical: "g" },
-  { pattern: /^pinch(?:es)?(?=\s|$)/i, canonical: "pinch" },
-  { pattern: /^dash(?:es)?(?=\s|$)/i, canonical: "dash" },
-  { pattern: /^cloves?(?=\s|$)/i, canonical: "clove" },
-  { pattern: /^cans?(?=\s|$)/i, canonical: "can" },
-  { pattern: /^(?:packages?|packs?|pkgs?\.?)(?=\s|$)/i, canonical: "package" },
-  { pattern: /^slices?(?=\s|$)/i, canonical: "slice" },
-  { pattern: /^sticks?(?=\s|$)/i, canonical: "stick" },
-  { pattern: /^(?:pieces?|pcs?\.?)(?=\s|$)/i, canonical: "piece" },
-  // Bare single-letter abbreviations last, once every longer word above has
-  // had a chance to match — see the note on ordering above.
-  { pattern: /^g\.?(?=\s|$)/i, canonical: "g" },
-  { pattern: /^l\.?(?=\s|$)/i, canonical: "l" },
-];
-const QUANTITY_PATTERN = /^(\d+\s+\d+\/\d+|\d+\/\d+|\d*\.?\d+|[¼½¾⅓⅔⅛⅜⅝⅞])\s*/;
-
-function splitIngredientLine(rawLine: string): ScrapedIngredient {
-  const line = rawLine.trim();
-  const quantityMatch = line.match(QUANTITY_PATTERN);
-  if (!quantityMatch) return { name: line };
-
-  const quantity = quantityMatch[1];
-  const afterQuantity = line.slice(quantityMatch[0].length).trim();
-
-  for (const { pattern, canonical } of UNIT_ALIASES) {
-    const match = afterQuantity.match(pattern);
-    if (match) {
-      const name = afterQuantity.slice(match[0].length).trim();
-      return { quantity, unit: canonical, name: name || afterQuantity };
-    }
-  }
-
-  return { quantity, name: afterQuantity || line };
-}
-
 function normalizeIngredients(list: unknown): ScrapedIngredient[] {
   if (!Array.isArray(list)) return [];
-  return list.filter((l): l is string => typeof l === "string" && l.trim().length > 0).map(splitIngredientLine);
+  return list.filter((l): l is string => typeof l === "string" && l.trim().length > 0).map(parseIngredientLine);
 }
 
 function flattenInstructions(node: unknown): string[] {

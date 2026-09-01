@@ -16,8 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { ImageUp, Loader2, Plus, Trash2, ChevronDown, X } from "lucide-react";
+import { ClipboardPaste, ImageUp, Loader2, Plus, Trash2, ChevronDown, X } from "lucide-react";
 import { recipeCoverUrl, recipeStepImageUrl, type RecipeDifficulty, type RecipeRecord } from "@/lib/recipes/types";
+import { parseIngredientListText } from "@/lib/recipes/ingredient-text";
 
 // Common cooking units for the dropdown — anything else falls back to a free-text "Custom…" field.
 const UNIT_OPTIONS = [
@@ -188,6 +189,26 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
   const addIngredient = () => setIngredients((prev) => [...prev, newIngredientRow()]);
   const removeIngredient = (id: string) =>
     setIngredients((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
+
+  const [bulkOpen, setBulkOpen] = React.useState(false);
+  const [bulkText, setBulkText] = React.useState("");
+  const addBulkIngredients = () => {
+    const parsed = parseIngredientListText(bulkText);
+    if (parsed.length === 0) return;
+    const rows: IngredientRow[] = parsed.map((p) => ({
+      id: crypto.randomUUID(),
+      quantity: p.quantity ?? "",
+      unit: p.unit ?? "",
+      customUnit: !!p.unit && !UNIT_OPTIONS.includes(p.unit),
+      name: p.name,
+      note: "",
+    }));
+    // Drop the empty placeholder row(s) rather than leaving a blank row
+    // mixed in with the newly pasted ones.
+    setIngredients((prev) => [...prev.filter((i) => i.name.trim()), ...rows]);
+    setBulkText("");
+    setBulkOpen(false);
+  };
 
   const updateStep = (id: string, patch: Partial<StepRow>) => {
     setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -507,11 +528,50 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-heading text-sm font-bold">Ingredients</h3>
-                <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addIngredient}>
-                  <Plus className="size-3.5" />
-                  Add
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setBulkOpen((v) => !v)}
+                  >
+                    <ClipboardPaste className="size-3.5" />
+                    Paste list
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addIngredient}>
+                    <Plus className="size-3.5" />
+                    Add
+                  </Button>
+                </div>
               </div>
+              {bulkOpen && (
+                <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3">
+                  <Textarea
+                    autoFocus
+                    value={bulkText}
+                    onChange={(e) => setBulkText(e.target.value)}
+                    placeholder={"One ingredient per line, e.g.\n200g milk\n70g water\n1 egg"}
+                    rows={5}
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setBulkOpen(false);
+                        setBulkText("");
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="button" size="sm" disabled={!bulkText.trim()} onClick={addBulkIngredients}>
+                      Add ingredients
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 {ingredients.map((row) => (
                   <div key={row.id} className="flex items-center gap-2">

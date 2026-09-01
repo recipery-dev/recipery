@@ -36,6 +36,40 @@ If a design decision trades a small amount of functionality for a visibly
 calmer screen, take that trade by default and say so — don't quietly add
 the feature-complete version.
 
+## Testing
+
+Add Vitest coverage for new or changed logic wherever practical, not just
+when asked — bug fixes and new features alike. Pure functions in `src/lib/`
+(parsing, formatting, scraping heuristics, etc.) are the highest-value
+target and the easiest to test in isolation; see `src/lib/recipes/*.test.ts`
+for the pattern, including `scrape.test.ts` for mocking `fetch` on
+network-touching code. UI-only changes with no meaningful logic (styling,
+layout) don't need a test just to have one. Run `pnpm test` before calling
+work done.
+
+- **Path alias**: `vitest.config.ts` mirrors `tsconfig.json`'s `@/*` alias
+  via `resolve.alias` — Vitest doesn't read `tsconfig` `paths` on its own.
+- **Storage/filesystem code**: prefer a real `LocalDriver` against a
+  `fs.mkdtemp()` temp dir over mocking the filesystem — see
+  `src/lib/storage/local.test.ts` and `src/lib/store/index.test.ts` (the
+  latter also covers the write-queue's concurrency guarantee, the part most
+  likely to silently break).
+- **`middleware.ts`-style code gated by a module-level env-derived
+  constant** (e.g. `DEMO_MODE`): needs `vi.resetModules()` + `vi.stubEnv()`
+  and a dynamic `await import()` per case, since the constant is only read
+  once at module load — see `src/middleware.test.ts`.
+- **React hooks/components**: use `@testing-library/react` with the
+  per-file `/** @vitest-environment jsdom */` docblock (the global
+  environment stays `node` — most tests don't need a DOM). Mock `fetch` via
+  `vi.stubGlobal` and `@/components/ui/toast` via `vi.mock` rather than
+  rendering the real toast provider; see `src/hooks/use-collections.test.ts`
+  and `use-shopping-list.test.ts` for the optimistic-update-then-rollback
+  pattern both hooks share.
+- **`localStorage` in jsdom tests**: jsdom 30 delegates it to Node's own
+  experimental webstorage, which no-ops without a `--localstorage-file`
+  flag. `vitest.setup.ts` polyfills it with an in-memory `Storage` — don't
+  remove that polyfill or add flag-based workarounds instead.
+
 ## Notes for future work
 
 This repo started from a different project's scaffold (an EPUB library
