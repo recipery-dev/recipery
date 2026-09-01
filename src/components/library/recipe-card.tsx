@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, FolderPlus, ShoppingCart, Trash2 } from "lucide-react";
+import { Check, FolderPlus, Play, ShoppingCart, Trash2 } from "lucide-react";
 import { RecipeTile, recipeTileClassName } from "./recipe-tile";
 import { RateDialog } from "./rate-dialog";
 import { getRecipeMenuActions } from "./recipe-menu-actions";
@@ -87,14 +87,24 @@ export function RecipeCard({ recipe, selected, onSelect, actions }: RecipeCardPr
           subtitle={recipe.source}
           coverUrl={recipe.coverUrl}
           badge={
-            recipe.cooked && (
-              <span
-                title="Cooked"
-                className="absolute bottom-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm"
-              >
-                <Check className="size-3" strokeWidth={3} />
-              </span>
-            )
+            <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1">
+              {recipe.videoUrl && (
+                <span
+                  title="Has video"
+                  className="flex size-5 items-center justify-center rounded-full bg-foreground/80 text-background shadow-sm"
+                >
+                  <Play className="size-2.5 fill-current" strokeWidth={0} />
+                </span>
+              )}
+              {recipe.cooked && (
+                <span
+                  title="Cooked"
+                  className="flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm"
+                >
+                  <Check className="size-3" strokeWidth={3} />
+                </span>
+              )}
+            </div>
           }
         />
       </ContextMenuTrigger>
