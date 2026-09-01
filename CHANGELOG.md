@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.0](https://github.com/recipery-dev/recipery/compare/v1.13.0...v1.14.0) (2026-09-01)
+
+
+### Features
+
+* Add bulk ingredient paste functionality in recipe form ([9f2238e](https://github.com/recipery-dev/recipery/commit/9f2238e860f4bbb2b8ed2a0e0fe9479ec04aada1))
+* Enhance YouTube recipe scraping to include video descriptions and parse ingredients/steps ([39e7691](https://github.com/recipery-dev/recipery/commit/39e76917f39cd2f6e39526c6b263f42c6fb4f23f))
+
 ## [1.13.0](https://github.com/recipery-dev/recipery/compare/v1.12.0...v1.13.0) (2026-09-01)
 
 
