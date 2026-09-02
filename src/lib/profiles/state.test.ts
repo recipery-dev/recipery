@@ -51,6 +51,23 @@ describe("applyProfileState", () => {
     expect(withoutImage.coverUrl).toBeNull();
   });
 
+  it("falls back to a YouTube thumbnail when there's no cover but there is a video", () => {
+    const withVideo = applyProfileState(
+      makeRecord({ videoUrl: "https://www.youtube.com/watch?v=abc123" })
+    );
+    expect(withVideo.coverUrl).toBe("https://img.youtube.com/vi/abc123/mqdefault.jpg");
+
+    // An uploaded cover still wins over the video fallback.
+    const withBoth = applyProfileState(
+      makeRecord({ hasImage: true, coverExt: "jpg", videoUrl: "https://www.youtube.com/watch?v=abc123" })
+    );
+    expect(withBoth.coverUrl).toBe("/api/files/recipes/dracula-cake/image.jpg");
+
+    // A non-YouTube video link has no thumbnail to fall back to.
+    const withOtherVideo = applyProfileState(makeRecord({ videoUrl: "https://vimeo.com/12345" }));
+    expect(withOtherVideo.coverUrl).toBeNull();
+  });
+
   it("preserves the rest of the record's fields unchanged", () => {
     const record = makeRecord({ description: "Spooky and delicious" });
     const recipe = applyProfileState(record);

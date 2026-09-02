@@ -1,5 +1,5 @@
 import { mutateJson, readJson } from "@/lib/store";
-import { recipeCoverUrl, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
+import { recipeThumbnailUrl, type Recipe, type RecipeRecord } from "@/lib/recipes/types";
 
 /** Per-profile state for one recipe — rating, favorite, cooked status, and
  * collection membership stay out of the shared RecipeRecord. */
@@ -53,6 +53,6 @@ export function applyProfileState(record: RecipeRecord, state?: ProfileRecipeSta
     favorite: !!state?.favorite,
     cooked: !!state?.cooked,
     lastCookedAt: state?.lastCookedAt,
-    coverUrl: recipeCoverUrl(record),
+    coverUrl: recipeThumbnailUrl(record),
   };
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { youtubeVideoId, isYouTubeUrl, youtubeEmbedUrl } from "./video";
+import { youtubeVideoId, isYouTubeUrl, youtubeEmbedUrl, youtubeThumbnailUrl } from "./video";
 
 describe("youtubeVideoId", () => {
   it("reads the id from a standard watch URL", () => {
@@ -68,5 +68,20 @@ describe("youtubeEmbedUrl", () => {
 
   it("returns null for a non-YouTube URL", () => {
     expect(youtubeEmbedUrl("https://example.com/video")).toBeNull();
+  });
+});
+
+describe("youtubeThumbnailUrl", () => {
+  it("builds an img.youtube.com mqdefault URL from the video id", () => {
+    expect(youtubeThumbnailUrl("https://www.youtube.com/watch?v=abc123")).toBe(
+      "https://img.youtube.com/vi/abc123/mqdefault.jpg"
+    );
+    expect(youtubeThumbnailUrl("https://youtu.be/abc123")).toBe(
+      "https://img.youtube.com/vi/abc123/mqdefault.jpg"
+    );
+  });
+
+  it("returns null for a non-YouTube URL", () => {
+    expect(youtubeThumbnailUrl("https://example.com/video")).toBeNull();
   });
 });

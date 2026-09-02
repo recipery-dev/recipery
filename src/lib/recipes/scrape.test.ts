@@ -139,7 +139,7 @@ describe("scrapeRecipeFromUrl — YouTube", () => {
     expect(result.source).toBe("Benny's baked");
     expect(result.sourceUrl).toBe("https://www.youtube.com/watch?v=abc123");
     expect(result.videoUrl).toBe("https://www.youtube.com/watch?v=abc123");
-    expect(result.imageUrl).toBe("https://i.ytimg.com/vi/abc123/hqdefault.jpg");
+    expect(result.imageUrl).toBe("https://img.youtube.com/vi/abc123/mqdefault.jpg");
     expect(result.ingredients).toEqual([
       { quantity: "500", unit: "g", name: "Plain flour" },
       { quantity: "1", name: "egg" },

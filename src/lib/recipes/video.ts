@@ -32,3 +32,15 @@ export function youtubeEmbedUrl(url: string): string | null {
   const id = youtubeVideoId(url);
   return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
 }
+
+/**
+ * `mqdefault` (320x180) is a genuinely resized 16:9 crop and exists for
+ * every video. The more common `hqdefault`/`sddefault` sizes are a fixed
+ * 4:3 canvas with the video frame pasted in the middle — letterboxed with
+ * black bars top and bottom — and `maxresdefault` is 16:9 but isn't always
+ * generated, so it 404s for plenty of videos.
+ */
+export function youtubeThumbnailUrl(url: string): string | null {
+  const id = youtubeVideoId(url);
+  return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
+}

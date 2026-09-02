@@ -1,3 +1,5 @@
+import { youtubeThumbnailUrl } from "./video";
+
 export interface RecipeIngredient {
   id: string;
   quantity?: string;
@@ -68,6 +70,19 @@ export function recipeCoverUrl(
     : base;
 }
 
+/**
+ * The image to display for a recipe: its uploaded cover if it has one,
+ * otherwise a thumbnail pulled from its video link (YouTube only, for now).
+ * Used anywhere a recipe's photo is shown (library grid, search, recipe
+ * detail) — kept separate from `recipeCoverUrl`, which stays strictly "does
+ * this recipe have an uploaded cover file" for the edit form's image picker.
+ */
+export function recipeThumbnailUrl(
+  record: Pick<RecipeRecord, "id" | "hasImage" | "coverExt" | "coverUpdatedAt" | "videoUrl">
+): string | null {
+  return recipeCoverUrl(record) ?? (record.videoUrl ? youtubeThumbnailUrl(record.videoUrl) : null);
+}
+
 export function recipeStepImageUrl(recipeId: string, step: RecipeStep): string | null {
   if (!step.hasImage || !step.imageExt) return null;
   const base = `/api/files/recipes/${recipeId}/steps/${step.id}.${step.imageExt}`;
@@ -81,5 +96,5 @@ export function totalMinutes(record: Pick<RecipeRecord, "prepMinutes" | "cookMin
 
 /** New recipes have no personal state yet — this is a plain, unrated recipe. */
 export function toLibraryRecipe(record: RecipeRecord): Recipe {
-  return { ...record, coverUrl: recipeCoverUrl(record) };
+  return { ...record, coverUrl: recipeThumbnailUrl(record) };
 }

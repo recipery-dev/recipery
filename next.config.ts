@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
     // our photos are streamed dynamically from R2/S3 via /api/files/[...key],
     // so every photo 404s there. Serve them unoptimized on that build instead.
     unoptimized: !!process.env.CLOUDFLARE_BUILD,
+    // Recipes with a video but no uploaded cover fall back to a YouTube
+    // thumbnail (see recipeThumbnailUrl) — the only external image host
+    // <Image> ever renders.
+    remotePatterns: [{ protocol: "https", hostname: "img.youtube.com" }],
   },
 };
 

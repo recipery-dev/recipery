@@ -5,7 +5,7 @@
  * "application/ld+json"> blocks and a JSON.parse.
  */
 
-import { isYouTubeUrl } from "./video";
+import { isYouTubeUrl, youtubeThumbnailUrl } from "./video";
 import { INGREDIENT_QUANTITY_PATTERN, parseIngredientLine } from "./ingredient-text";
 
 export interface ScrapedIngredient {
@@ -151,7 +151,9 @@ async function scrapeYouTubeRecipe(url: string): Promise<ScrapedRecipe> {
       found.ingredients.length > 0 || found.steps.length > 0
         ? "Imported from YouTube — double-check the ingredients and steps pulled from the video description."
         : "Imported from YouTube — add ingredients and steps from the video.",
-    imageUrl: data.thumbnail_url,
+    // oEmbed's own thumbnail_url is the letterboxed hqdefault size — build
+    // the bar-free mqdefault URL from the video ID instead.
+    imageUrl: youtubeThumbnailUrl(url) ?? data.thumbnail_url,
     tags: [],
     ingredients: found.ingredients,
     steps: found.steps,
