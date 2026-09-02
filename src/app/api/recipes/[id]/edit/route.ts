@@ -75,6 +75,11 @@ export async function POST(
     hasImage = true;
     coverExt = ext;
     coverUpdatedAt = new Date().toISOString();
+  } else if (form.get("removeImage") === "1" && existing.hasImage) {
+    if (existing.coverExt) await storage.delete(`recipes/${id}/image.${existing.coverExt}`);
+    hasImage = false;
+    coverExt = undefined;
+    coverUpdatedAt = undefined;
   }
 
   for (const step of steps) {

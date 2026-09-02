@@ -131,8 +131,9 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
 
   const [coverFile, setCoverFile] = React.useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = React.useState<string | null>(null);
-  const coverInputRef = React.useRef<HTMLInputElement>(null);
+  const [coverRemoved, setCoverRemoved] = React.useState(false);
   const existingCoverUrl = recipe ? recipeCoverUrl(recipe) : null;
+  const displayedCoverUrl = coverPreviewUrl ?? (coverRemoved ? null : existingCoverUrl);
   const titleInputRef = React.useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = React.useState(false);
@@ -157,6 +158,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
     setSteps(fresh.steps);
     setDetailsOpen(false);
     setCoverFile(null);
+    setCoverRemoved(false);
     requestAnimationFrame(() => titleInputRef.current?.focus());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, recipe?.id]);
@@ -180,6 +182,12 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       return;
     }
     setCoverFile(file);
+    setCoverRemoved(false);
+  };
+
+  const handleRemoveCover = () => {
+    setCoverFile(null);
+    setCoverRemoved(true);
   };
 
   const updateIngredient = (id: string, patch: Partial<IngredientRow>) => {
@@ -311,6 +319,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
         )
       );
       if (coverFile) form.set("image", coverFile);
+      else if (coverRemoved) form.set("removeImage", "1");
       for (const step of steps) {
         if (step.newFile) form.set(`step-image-${step.id}`, step.newFile);
       }
@@ -346,35 +355,35 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       <div className="flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4">
         <div className="flex flex-col gap-6 pb-4">
           <div className="flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => coverInputRef.current?.click()}
-              aria-label="Set cover photo"
-              className="group relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-border bg-muted"
-            >
-              {coverPreviewUrl || existingCoverUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={coverPreviewUrl ?? existingCoverUrl!}
-                  alt="Recipe cover"
-                  className="size-full object-cover"
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-sm text-muted-foreground">
-                  Add a cover photo
+            <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-xl border border-border bg-muted">
+              <label
+                aria-label={displayedCoverUrl ? "Replace cover photo" : "Add a cover photo"}
+                className="absolute inset-0 cursor-pointer"
+              >
+                {displayedCoverUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={displayedCoverUrl} alt="Recipe cover" className="size-full object-cover" />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-sm text-muted-foreground">
+                    Add a cover photo
+                  </div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
+                  <ImageUp className="size-6 text-white" strokeWidth={1.75} />
                 </div>
+                <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+              </label>
+              {displayedCoverUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveCover}
+                  aria-label="Remove cover photo"
+                  className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity hover:bg-destructive group-hover:opacity-100"
+                >
+                  <X className="size-3.5" />
+                </button>
               )}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/40 group-hover:opacity-100">
-                <ImageUp className="size-6 text-white" strokeWidth={1.75} />
-              </div>
-            </button>
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleCoverChange}
-            />
+            </div>
           </div>
 
           <div className="flex flex-col gap-2">

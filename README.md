@@ -59,7 +59,13 @@ Full docs are at [docs.recipery.dev](https://docs.recipery.dev).
 - Import from a YouTube link too — pulls in the title, thumbnail, and video,
   plus a best-effort read of any ingredients/steps in the description
 - Attach a video to any recipe, YouTube or otherwise — add it on import,
-  or set/change it later from Edit
+  or set/change it later from Edit; a recipe with no cover photo of its own
+  falls back to its video's thumbnail automatically
+- Discover new recipes without leaving the app — search a configurable list
+  of recipe sites (Settings → Recipe Discovery) and import anything you like
+  straight from the results
+- Find Similar surfaces other takes on a recipe already in your library from
+  those same sites, for when you want to compare or try a different version
 - Ingredients with quantities, units, and a servings scaler that recalculates
   amounts on the fly
 - Step-by-step instructions with per-step photos, drag-to-reorder, and a
