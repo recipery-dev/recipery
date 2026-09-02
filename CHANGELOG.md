@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/recipery-dev/recipery/compare/v1.17.0...v1.18.0) (2026-09-02)
+
+
+### Features
+
+* Add YouTube thumbnail fallback for recipes without uploaded covers ([a822133](https://github.com/recipery-dev/recipery/commit/a822133e0a417a6793f5e1fe8d9568d24fa6bb8b))
+
 ## [1.17.0](https://github.com/recipery-dev/recipery/compare/v1.16.1...v1.17.0) (2026-09-02)
 
 
