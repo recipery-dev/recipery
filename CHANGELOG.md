@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/recipery-dev/recipery/compare/v1.15.0...v1.16.0) (2026-09-02)
+
+
+### Features
+
+* Integrate Tabs component for improved recipe source navigation in discovery drawer ([de0a069](https://github.com/recipery-dev/recipery/commit/de0a069feee8247246d30750deeba3688e341b49))
+
 ## [1.15.0](https://github.com/recipery-dev/recipery/compare/v1.14.0...v1.15.0) (2026-09-01)
 
 
