@@ -14,7 +14,6 @@ import {
   Minus,
   Plus,
   Play,
-  X,
 } from "lucide-react";
 import { RateDialog } from "./rate-dialog";
 import { FindSimilarDrawer } from "./find-similar-drawer";
@@ -64,7 +63,6 @@ interface RecipeDetailPanelProps {
   recipe: Recipe;
   collections: Collection[];
   onToggleCollection: (collectionId: string, recipeId: string) => void;
-  onClose: () => void;
   onUpdateRecipe: (
     recipeId: string,
     patch: { rating?: number; favorite?: boolean; cooked?: boolean },
@@ -77,7 +75,6 @@ export function RecipeDetailPanel({
   recipe,
   collections,
   onToggleCollection,
-  onClose,
   onUpdateRecipe,
   onDeleteRecipe,
   onEditRecipe,
@@ -140,17 +137,8 @@ export function RecipeDetailPanel({
 
   return (
     <aside className="relative flex h-full w-full flex-col overflow-x-hidden">
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close details"
-        className="no-print absolute top-4 right-4 flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-      >
-        <X className="size-4" />
-      </button>
-
       <div className="shrink-0 px-6 pt-6">
-        <div className="flex gap-4 pr-8">
+        <div className="flex gap-4">
           <RecipePhoto
             title={recipe.title}
             coverUrl={recipe.coverUrl}

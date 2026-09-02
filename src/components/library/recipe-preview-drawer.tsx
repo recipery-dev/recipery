@@ -37,23 +37,21 @@ export function RecipePreviewDrawer() {
       open={!!selected}
       onOpenChange={(open, eventDetails) => {
         if (open) return;
-        // Non-modal drawers close on outside press/focus-out by default,
-        // which would otherwise fire when the edit drawer (or the rate/
-        // delete dialogs) opens on top of this one — their content is
-        // "outside" this drawer's own DOM. Ignore the dismissal when the
-        // interaction lands inside another overlay instead of the page
-        // behind it, so a real outside click still closes the preview.
-        const reason = eventDetails.reason;
-        const relevantTarget =
-          reason === "focus-out"
-            ? (eventDetails.event as FocusEvent).relatedTarget
-            : (eventDetails.event as Event).target;
-        if (
-          relevantTarget instanceof Element &&
-          relevantTarget.closest('[role="dialog"], [role="alertdialog"]')
-        ) {
-          eventDetails.cancel();
-          return;
+        // Non-modal drawers close on focus-out by default, which would
+        // otherwise fire when the edit drawer (or the rate/delete dialogs)
+        // opens on top of this one and steals focus — their content is
+        // "outside" this drawer's own DOM. Only guard that one reason:
+        // this drawer's own popup carries role="dialog" on itself, so
+        // checking every reason against `.closest('[role="dialog"]')`
+        // would match the drawer's own wrapper for any dismissal that
+        // originates from inside it — which is every swipe gesture —
+        // and block swipe-to-close entirely.
+        if (eventDetails.reason === "focus-out") {
+          const relevantTarget = (eventDetails.event as FocusEvent).relatedTarget;
+          if (relevantTarget instanceof Element && relevantTarget.closest('[role="dialog"], [role="alertdialog"]')) {
+            eventDetails.cancel();
+            return;
+          }
         }
         setSelected(null);
       }}
@@ -67,7 +65,6 @@ export function RecipePreviewDrawer() {
           onUpdateRecipe={recipeCardActions.onUpdateRecipe}
           onDeleteRecipe={recipeCardActions.onDeleteRecipe}
           onEditRecipe={recipeCardActions.onEditRecipe}
-          onClose={() => setSelected(null)}
         />
       )}
       <RecipeFormDrawer
