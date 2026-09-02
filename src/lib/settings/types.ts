@@ -22,7 +22,7 @@ export const DEFAULT_RECIPE_DISCOVERY_SOURCES: RecipeDiscoverySource[] = [
   {
     id: "nyt-cooking",
     name: "NYT Cooking",
-    searchUrlTemplate: "https://cooking.nytimes.com/search?q={query}&include_content=articles",
+    searchUrlTemplate: "https://cooking.nytimes.com/search?q={query}&type=recipe",
   },
   {
     id: "bbc-good-food",
