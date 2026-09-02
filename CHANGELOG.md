@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/recipery-dev/recipery/compare/v1.16.1...v1.17.0) (2026-09-02)
+
+
+### Features
+
+* Update AGENTS.md to emphasize DRY principles and shared component usage ([336ba4d](https://github.com/recipery-dev/recipery/commit/336ba4d2e2fdd506e2a3d926cd0a0e2c35ff9d9e))
+
 ## [1.16.1](https://github.com/recipery-dev/recipery/compare/v1.16.0...v1.16.1) (2026-09-02)
 
 
