@@ -1,6 +1,19 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { buildSimilarSearchQuery, buildSimilarSearchUrl, searchRecipeSource } from "./find-similar";
+import {
+  buildSimilarSearchQuery,
+  buildSimilarSearchUrl,
+  searchRecipeSource,
+  browseRecipeSource,
+  searchAllSources,
+  browseAllSources,
+} from "./find-similar";
 import type { RecipeDiscoverySource } from "../settings/types";
+
+function nextDataHtml(cards: Array<{ id: string; title: string; url: string }>) {
+  return `<html><body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+    props: { pageProps: { results: cards.map((c) => ({ ...c, type: "recipe" })) } },
+  })}</script></body></html>`;
+}
 
 const NYT_SOURCE: RecipeDiscoverySource = {
   id: "nyt-cooking",
@@ -221,5 +234,162 @@ describe("searchRecipeSource", () => {
   it("throws a friendly error when neither strategy finds anything", async () => {
     stubFetch("<html></html>");
     await expect(searchRecipeSource(NYT_SOURCE, "beef")).rejects.toThrow("Couldn't read structured results");
+  });
+});
+
+describe("browseRecipeSource", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function stubFetch(html: string, status = 200) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(html, { status }))
+    );
+  }
+
+  const BROWSABLE_SOURCE: RecipeDiscoverySource = {
+    ...NYT_SOURCE,
+    browseUrl: "https://cooking.nytimes.com/search?sort=firstPublished&include_content=articles",
+  };
+
+  it("parses the source's browse listing the same way as a search", async () => {
+    const html = `<html><body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
+      props: {
+        pageProps: {
+          results: [
+            {
+              id: 1026425,
+              title: "Smashed Beef Kebab With Cucumber Yogurt",
+              url: "/recipes/1026425-smashed-beef-kebab-with-cucumber-yogurt",
+              type: "recipe",
+              time: "25 minutes",
+              image: { src: { card: "https://static01.nyt.com/image.jpg" } },
+              ratings: { avgRating: 5, numRatings: 10740 },
+            },
+          ],
+        },
+      },
+    })}</script></body></html>`;
+    stubFetch(html);
+
+    const results = await browseRecipeSource(BROWSABLE_SOURCE);
+    expect(results).toEqual([
+      {
+        id: "1026425",
+        title: "Smashed Beef Kebab With Cucumber Yogurt",
+        url: "https://cooking.nytimes.com/recipes/1026425-smashed-beef-kebab-with-cucumber-yogurt",
+        imageUrl: "https://static01.nyt.com/image.jpg",
+        time: "25 minutes",
+        rating: 5,
+      },
+    ]);
+  });
+
+  it("throws when the source has no browseUrl configured", async () => {
+    await expect(browseRecipeSource(NYT_SOURCE)).rejects.toThrow("doesn't have a default listing configured");
+  });
+
+  it("throws a friendly error when the fetch fails", async () => {
+    stubFetch("", 500);
+    await expect(browseRecipeSource(BROWSABLE_SOURCE)).rejects.toThrow("Couldn't load NYT Cooking (HTTP 500)");
+  });
+
+  it("throws a friendly error when neither strategy finds anything", async () => {
+    stubFetch("<html></html>");
+    await expect(browseRecipeSource(BROWSABLE_SOURCE)).rejects.toThrow("Couldn't read structured results");
+  });
+});
+
+describe("searchAllSources / browseAllSources", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const SOURCE_A: RecipeDiscoverySource = {
+    id: "a",
+    name: "Source A",
+    searchUrlTemplate: "https://a.example.com/search?q={query}",
+    browseUrl: "https://a.example.com/browse",
+  };
+  const SOURCE_B: RecipeDiscoverySource = {
+    id: "b",
+    name: "Source B",
+    searchUrlTemplate: "https://b.example.com/search?q={query}",
+    browseUrl: "https://b.example.com/browse",
+  };
+  const SOURCE_C_NO_BROWSE: RecipeDiscoverySource = {
+    id: "c",
+    name: "Source C",
+    searchUrlTemplate: "https://c.example.com/search?q={query}",
+  };
+
+  function stubFetchByHost(byHost: Record<string, { html?: string; status?: number }>) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        const host = new URL(url).hostname;
+        const entry = byHost[host];
+        if (!entry) return new Response("", { status: 404 });
+        return new Response(entry.html ?? "", { status: entry.status ?? 200 });
+      })
+    );
+  }
+
+  it("interleaves results from every source round-robin", async () => {
+    stubFetchByHost({
+      "a.example.com": {
+        html: nextDataHtml([
+          { id: "a1", title: "A First", url: "/a1" },
+          { id: "a2", title: "A Second", url: "/a2" },
+        ]),
+      },
+      "b.example.com": {
+        html: nextDataHtml([{ id: "b1", title: "B First", url: "/b1" }]),
+      },
+    });
+
+    const { results, failedSources } = await searchAllSources([SOURCE_A, SOURCE_B], "beef");
+    expect(results.map((r) => r.id)).toEqual(["a1", "b1", "a2"]);
+    expect(failedSources).toEqual([]);
+  });
+
+  it("still succeeds with the sources that responded when one fails", async () => {
+    stubFetchByHost({
+      "a.example.com": {
+        html: nextDataHtml([{ id: "a1", title: "A First", url: "/a1" }]),
+      },
+      "b.example.com": { status: 500 },
+    });
+
+    const { results, failedSources } = await searchAllSources([SOURCE_A, SOURCE_B], "beef");
+    expect(results.map((r) => r.id)).toEqual(["a1"]);
+    expect(failedSources).toEqual(["Source B"]);
+  });
+
+  it("lists every source as failed when none respond", async () => {
+    stubFetchByHost({
+      "a.example.com": { status: 500 },
+      "b.example.com": { status: 500 },
+    });
+
+    const { results, failedSources } = await searchAllSources([SOURCE_A, SOURCE_B], "beef");
+    expect(results).toEqual([]);
+    expect(failedSources.sort()).toEqual(["Source A", "Source B"]);
+  });
+
+  it("browseAllSources only tries sources with a browseUrl", async () => {
+    stubFetchByHost({
+      "a.example.com": {
+        html: nextDataHtml([{ id: "a1", title: "A First", url: "/a1" }]),
+      },
+    });
+
+    const { results, failedSources } = await browseAllSources([SOURCE_A, SOURCE_C_NO_BROWSE]);
+    expect(results.map((r) => r.id)).toEqual(["a1"]);
+    // Source C has no browseUrl — silently skipped, not a failure.
+    expect(failedSources).toEqual([]);
   });
 });

@@ -75,13 +75,14 @@ export function RecipeGrid({
       ) : (
         <>
           <RecipeGridLayout>
-            {pageRecipes.map((recipe) => (
+            {pageRecipes.map((recipe, index) => (
               <RecipeCard
                 key={recipe.id}
                 recipe={recipe}
                 selected={recipe.id === selectedId}
                 onSelect={onSelect}
                 actions={actions}
+                index={index}
               />
             ))}
           </RecipeGridLayout>

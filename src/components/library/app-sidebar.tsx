@@ -61,6 +61,7 @@ interface NavItem {
 }
 
 const LIBRARY_ITEM: NavItem = { href: "/", label: "Library", icon: LibraryBig };
+const DISCOVER_ITEM: NavItem = { href: "/discover", label: "Discover", icon: Compass };
 const NAV_ITEMS: NavItem[] = [{ href: "/shopping-list", label: "Shopping List", icon: ShoppingCart }];
 
 const FOOTER_ITEMS = [
@@ -86,7 +87,6 @@ export function AppSidebar() {
     recolorCollection,
     deleteCollection,
     addRecipeToCollection,
-    setDiscoverOpen,
   } = useLibraryShell();
 
   const [confirmDelete, setConfirmDelete] = React.useState<Collection | null>(
@@ -181,9 +181,13 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Discover" onClick={() => setDiscoverOpen(true)}>
-                <Compass />
-                <span>Discover</span>
+              <SidebarMenuButton
+                isActive={pathname === DISCOVER_ITEM.href}
+                tooltip={DISCOVER_ITEM.label}
+                render={<Link href={DISCOVER_ITEM.href} />}
+              >
+                <DISCOVER_ITEM.icon />
+                <span>{DISCOVER_ITEM.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             {NAV_ITEMS.map((item) => (

@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   GripVertical,
+  ChevronDown,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ const CATEGORIES: {
 ];
 
 function newDiscoverySource(): RecipeDiscoverySource {
-  return { id: crypto.randomUUID(), name: "", searchUrlTemplate: "" };
+  return { id: crypto.randomUUID(), name: "", searchUrlTemplate: "", browseUrl: "" };
 }
 
 function SettingRow({
@@ -170,6 +171,9 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
     JSON.stringify(discoverySources) !== JSON.stringify(settings.recipeDiscoverySources);
   const [draggedSourceId, setDraggedSourceId] = React.useState<string | null>(null);
   const [dragOverSourceId, setDragOverSourceId] = React.useState<string | null>(null);
+  // Which sources have their (optional, rarely-needed) browse URL field
+  // expanded — collapsed by default to keep each row to one line.
+  const [expandedBrowseUrlIds, setExpandedBrowseUrlIds] = React.useState<Set<string>>(new Set());
   const reorderDiscoverySources = (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;
     setDiscoverySources((prev) => {
@@ -309,7 +313,12 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
 
   const saveDiscoverySources = async () => {
     const cleaned = discoverySources
-      .map((s) => ({ id: s.id, name: s.name.trim(), searchUrlTemplate: s.searchUrlTemplate.trim() }))
+      .map((s) => ({
+        id: s.id,
+        name: s.name.trim(),
+        searchUrlTemplate: s.searchUrlTemplate.trim(),
+        browseUrl: s.browseUrl?.trim() || undefined,
+      }))
       .filter((s) => s.name || s.searchUrlTemplate);
 
     for (const s of cleaned) {
@@ -331,6 +340,15 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
       } catch {
         toast.add({ title: `"${s.name}" doesn't have a valid http(s) URL`, type: "error" });
         return;
+      }
+      if (s.browseUrl) {
+        try {
+          const parsed = new URL(s.browseUrl);
+          if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+        } catch {
+          toast.add({ title: `"${s.name}"'s browse URL isn't a valid http(s) URL`, type: "error" });
+          return;
+        }
       }
     }
 
@@ -622,7 +640,9 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
         {category === "discovery" && (
           <SectionCard
             title="Recipe Discovery"
-            description={'Sites "Find Similar" searches for recipes like the one you\'re viewing. The URL must include a "{query}" placeholder where the search term goes.'}
+            description={
+              'Sites Discover and Find Similar search. The search URL must include a "{query}" placeholder where the search term goes. The browse URL is optional — a plain link to the site\'s own sorted listing (e.g. most recent or top rated) — and populates Discover before anyone searches.'
+            }
             footer={
               <div className="flex w-full items-center justify-between gap-2">
                 <Button
@@ -678,7 +698,7 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                         setDragOverSourceId(null);
                       }}
                       className={cn(
-                        "flex flex-col gap-2 py-4 sm:flex-row sm:items-center",
+                        "flex flex-col gap-2 py-4 sm:flex-row sm:items-start",
                         index > 0 && "border-t transition-colors duration-150",
                         index > 0 && (isDropTarget ? "border-t-2 border-ring" : "border-border/60"),
                         draggedSourceId === source.id && "opacity-40"
@@ -692,38 +712,76 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                           setDragOverSourceId(null);
                         }}
                         title="Drag to reorder"
-                        className="hidden shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing sm:flex"
+                        className="hidden shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing sm:flex sm:h-9"
                       >
                         <GripVertical className="size-4" />
                       </div>
-                      <Input
-                        value={source.name}
-                        onChange={(e) =>
-                          setDiscoverySources((prev) =>
-                            prev.map((s) => (s.id === source.id ? { ...s, name: e.target.value } : s))
-                          )
-                        }
-                        placeholder="Name, e.g. NYT Cooking"
-                        className="sm:w-40"
-                      />
-                      <Input
-                        value={source.searchUrlTemplate}
-                        onChange={(e) =>
-                          setDiscoverySources((prev) =>
-                            prev.map((s) => (s.id === source.id ? { ...s, searchUrlTemplate: e.target.value } : s))
-                          )
-                        }
-                        placeholder="https://example.com/search?q={query}"
-                        className="flex-1"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setDiscoverySources((prev) => prev.filter((s) => s.id !== source.id))}
-                        aria-label="Remove source"
-                        className="flex size-8 shrink-0 items-center justify-center self-end rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive sm:self-auto"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Input
+                            value={source.name}
+                            onChange={(e) =>
+                              setDiscoverySources((prev) =>
+                                prev.map((s) => (s.id === source.id ? { ...s, name: e.target.value } : s))
+                              )
+                            }
+                            placeholder="Name, e.g. NYT Cooking"
+                            className="sm:w-40"
+                          />
+                          <Input
+                            value={source.searchUrlTemplate}
+                            onChange={(e) =>
+                              setDiscoverySources((prev) =>
+                                prev.map((s) => (s.id === source.id ? { ...s, searchUrlTemplate: e.target.value } : s))
+                              )
+                            }
+                            placeholder="Search URL, e.g. https://example.com/search?q={query}"
+                            className="flex-1"
+                          />
+                        </div>
+                        {expandedBrowseUrlIds.has(source.id) && (
+                          <Input
+                            value={source.browseUrl ?? ""}
+                            onChange={(e) =>
+                              setDiscoverySources((prev) =>
+                                prev.map((s) => (s.id === source.id ? { ...s, browseUrl: e.target.value } : s))
+                              )
+                            }
+                            placeholder="Browse URL (optional) — e.g. https://example.com/search?sort=recent"
+                          />
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1 self-end sm:h-9 sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedBrowseUrlIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(source.id)) next.delete(source.id);
+                              else next.add(source.id);
+                              return next;
+                            })
+                          }
+                          aria-label={expandedBrowseUrlIds.has(source.id) ? "Hide browse URL" : "Add a browse URL"}
+                          title="Browse URL (optional)"
+                          className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              "size-3.5 transition-transform",
+                              expandedBrowseUrlIds.has(source.id) && "rotate-180"
+                            )}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDiscoverySources((prev) => prev.filter((s) => s.id !== source.id))}
+                          aria-label="Remove source"
+                          className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

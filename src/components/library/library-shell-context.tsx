@@ -55,8 +55,15 @@ interface LibraryShellContextValue {
   openEditRecipe: (recipe: RecipeRecord) => void;
   closeRecipeForm: () => void;
   handleRecipeSaved: (record: RecipeRecord) => void;
-  discoverOpen: boolean;
-  setDiscoverOpen: (open: boolean) => void;
+  /** The header's search bar doubles as Discover's search on that page —
+   * shared here so both can read/write the same query. `discoverQuery` is
+   * the live input value; `submitDiscoverQuery` commits it (Enter, the
+   * header, or a Discover category chip) and is what actually triggers a
+   * search. */
+  discoverQuery: string;
+  setDiscoverQuery: (query: string) => void;
+  discoverSubmittedQuery: string;
+  submitDiscoverQuery: (query: string) => void;
 }
 
 const LibraryShellContext =
@@ -300,7 +307,13 @@ export function LibraryShellProvider({
   );
   const closeRecipeForm = React.useCallback(() => setFormDrawer(null), []);
 
-  const [discoverOpen, setDiscoverOpen] = React.useState(false);
+  const [discoverQuery, setDiscoverQuery] = React.useState("");
+  const [discoverSubmittedQuery, setDiscoverSubmittedQuery] = React.useState("");
+  const submitDiscoverQuery = React.useCallback((query: string) => {
+    const trimmed = query.trim();
+    setDiscoverQuery(trimmed);
+    setDiscoverSubmittedQuery(trimmed);
+  }, []);
 
   const handleRecipeSaved = (record: RecipeRecord) => {
     if (formDrawer?.mode === "create") {
@@ -355,8 +368,10 @@ export function LibraryShellProvider({
     openEditRecipe,
     closeRecipeForm,
     handleRecipeSaved,
-    discoverOpen,
-    setDiscoverOpen,
+    discoverQuery,
+    setDiscoverQuery,
+    discoverSubmittedQuery,
+    submitDiscoverQuery,
   };
 
   return (

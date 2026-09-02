@@ -1,29 +1,30 @@
 import { NextResponse } from "next/server";
-import { searchRecipeSource } from "@/lib/recipes/find-similar";
+import { searchAllSources, browseAllSources } from "@/lib/recipes/find-similar";
 import { getSettings } from "@/lib/settings/store";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
-  if (!q) {
-    return NextResponse.json({ error: "A search query is required" }, { status: 400 });
-  }
 
   const settings = await getSettings();
-  const sourceId = searchParams.get("sourceId");
-  const source =
-    settings.recipeDiscoverySources.find((s) => s.id === sourceId) ?? settings.recipeDiscoverySources[0];
-  if (!source) {
+  const sources = settings.recipeDiscoverySources;
+  if (sources.length === 0) {
     return NextResponse.json(
       { error: "No recipe discovery sources are configured — add one in Settings." },
       { status: 400 }
     );
   }
 
-  try {
-    const results = await searchRecipeSource(source, q);
-    return NextResponse.json({ results, source });
-  } catch (error) {
-    return NextResponse.json({ error: (error as Error).message, source }, { status: 502 });
+  // Fans out to every configured source in parallel and merges the results —
+  // both Discover and Find Similar show one unified feed, not per-source tabs.
+  const { results, failedSources } = q ? await searchAllSources(sources, q) : await browseAllSources(sources);
+
+  if (results.length === 0 && failedSources.length > 0) {
+    return NextResponse.json(
+      { error: `Couldn't load recipes — ${failedSources.join(", ")} didn't respond.` },
+      { status: 502 }
+    );
   }
+
+  return NextResponse.json({ results });
 }

@@ -45,9 +45,11 @@ interface RecipeCardProps {
   selected?: boolean;
   onSelect: (recipe: Recipe) => void;
   actions: RecipeCardActions;
+  /** Staggers the entrance animation so tiles don't all fade in at once. */
+  index?: number;
 }
 
-export function RecipeCard({ recipe, selected, onSelect, actions }: RecipeCardProps) {
+export function RecipeCard({ recipe, selected, onSelect, actions, index = 0 }: RecipeCardProps) {
   const { collections, onToggleCollection, onUpdateRecipe, onDeleteRecipe, onEditRecipe } = actions;
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
@@ -79,6 +81,7 @@ export function RecipeCard({ recipe, selected, onSelect, actions }: RecipeCardPr
               }
             }}
             className={recipeTileClassName(selected)}
+            style={{ animationDelay: `${Math.min(index, 20) * 25}ms` }}
           />
         }
       >

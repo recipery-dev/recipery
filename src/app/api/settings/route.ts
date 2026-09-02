@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSettings, updateSettings, type SettingsPatch } from "@/lib/settings/store";
-import { toPublicSettings } from "@/lib/settings/types";
+import { toPublicSettings, parseDiscoverySources } from "@/lib/settings/types";
 import { getActiveProfile } from "@/lib/profiles/store";
 
 export async function GET() {
@@ -58,36 +58,18 @@ export async function PATCH(request: Request) {
     patch.showIngredientGramHints = body.showIngredientGramHints;
   }
 
-  if (Array.isArray(body.recipeDiscoverySources)) {
-    const sources = body.recipeDiscoverySources;
-    const valid = sources.every((s) => {
-      if (typeof s !== "object" || s === null) return false;
-      const { id, name, searchUrlTemplate } = s as unknown as Record<string, unknown>;
-      if (typeof id !== "string" || !id.trim()) return false;
-      if (typeof name !== "string" || !name.trim()) return false;
-      if (typeof searchUrlTemplate !== "string" || !searchUrlTemplate.includes("{query}")) return false;
-      try {
-        const parsed = new URL(searchUrlTemplate.replace("{query}", "x"));
-        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
-      } catch {
-        return false;
-      }
-      return true;
-    });
-    if (!valid) {
+  if (body.recipeDiscoverySources !== undefined) {
+    const sources = parseDiscoverySources(body.recipeDiscoverySources);
+    if (!sources) {
       return NextResponse.json(
         {
           error:
-            "Each recipe discovery source needs a name and a valid http(s) URL containing a \"{query}\" placeholder",
+            "Each recipe discovery source needs a name, a valid http(s) search URL containing a \"{query}\" placeholder, and a valid http(s) browse URL if one is set",
         },
         { status: 400 }
       );
     }
-    patch.recipeDiscoverySources = sources.map((s) => ({
-      id: s.id.trim(),
-      name: s.name.trim(),
-      searchUrlTemplate: s.searchUrlTemplate.trim(),
-    }));
+    patch.recipeDiscoverySources = sources;
   }
 
   const settings = await updateSettings(patch);

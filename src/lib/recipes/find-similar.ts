@@ -253,6 +253,16 @@ function parseItemListResults(html: string, baseUrl: string): SimilarRecipeResul
     .filter((r): r is SimilarRecipeResult => r !== null);
 }
 
+/** Shared by search and browse — reads whatever structured listing data the
+ * page ships, trying the `__NEXT_DATA__` strategy before the generic
+ * `ItemList` one. Returns an empty array (never throws) when neither finds
+ * anything, so callers can phrase their own "couldn't find results" error. */
+function parseListingHtml(html: string, baseUrl: string): SimilarRecipeResult[] {
+  const nextDataResults = parseNextDataResults(html, baseUrl);
+  if (nextDataResults.length > 0) return nextDataResults;
+  return parseItemListResults(html, baseUrl);
+}
+
 export async function searchRecipeSource(
   source: RecipeDiscoverySource,
   query: string
@@ -262,11 +272,78 @@ export async function searchRecipeSource(
   if (!res.ok) throw new Error(`Couldn't search ${source.name} (HTTP ${res.status})`);
   const html = await res.text();
 
-  const nextDataResults = parseNextDataResults(html, searchUrl);
-  if (nextDataResults.length > 0) return nextDataResults;
-
-  const itemListResults = parseItemListResults(html, searchUrl);
-  if (itemListResults.length > 0) return itemListResults;
+  const results = parseListingHtml(html, searchUrl);
+  if (results.length > 0) return results;
 
   throw new Error(`Couldn't read structured results from ${source.name} — try opening the search directly.`);
+}
+
+/** Populates Discover with the source's own default/sorted listing (e.g.
+ * "most recent") before the user has searched for anything — see
+ * `RecipeDiscoverySource.browseUrl`. */
+export async function browseRecipeSource(source: RecipeDiscoverySource): Promise<SimilarRecipeResult[]> {
+  if (!source.browseUrl) {
+    throw new Error(`${source.name} doesn't have a default listing configured.`);
+  }
+  const res = await fetch(source.browseUrl, { headers: { "User-Agent": scrapeUserAgent() } });
+  if (!res.ok) throw new Error(`Couldn't load ${source.name} (HTTP ${res.status})`);
+  const html = await res.text();
+
+  const results = parseListingHtml(html, source.browseUrl);
+  if (results.length > 0) return results;
+
+  throw new Error(`Couldn't read structured results from ${source.name}.`);
+}
+
+export interface DiscoverFeedResult {
+  results: SimilarRecipeResult[];
+  /** Names of sources that were tried but didn't return anything — a soft
+   * signal for callers, not necessarily an error (some sources succeeding
+   * is treated as an overall success). */
+  failedSources: string[];
+}
+
+/** Interleaves several sources' result lists round-robin instead of just
+ * concatenating them, so the merged feed isn't dominated by whichever site
+ * happens to be listed first. */
+function interleave(lists: SimilarRecipeResult[][]): SimilarRecipeResult[] {
+  const out: SimilarRecipeResult[] = [];
+  const max = Math.max(0, ...lists.map((l) => l.length));
+  for (let i = 0; i < max; i++) {
+    for (const list of lists) {
+      if (list[i]) out.push(list[i]);
+    }
+  }
+  return out;
+}
+
+function collectFeedResult(
+  sources: RecipeDiscoverySource[],
+  settled: PromiseSettledResult<SimilarRecipeResult[]>[]
+): DiscoverFeedResult {
+  const lists: SimilarRecipeResult[][] = [];
+  const failedSources: string[] = [];
+  settled.forEach((outcome, i) => {
+    if (outcome.status === "fulfilled") lists.push(outcome.value);
+    else failedSources.push(sources[i].name);
+  });
+  return { results: interleave(lists), failedSources };
+}
+
+/** Discover's unified feed: searches every configured source in parallel
+ * and merges the results — no per-source tabs, one combined list. */
+export async function searchAllSources(
+  sources: RecipeDiscoverySource[],
+  query: string
+): Promise<DiscoverFeedResult> {
+  const settled = await Promise.allSettled(sources.map((s) => searchRecipeSource(s, query)));
+  return collectFeedResult(sources, settled);
+}
+
+/** Discover's unified browse feed — only sources with a `browseUrl` take
+ * part; sources without one are silently skipped, not counted as failures. */
+export async function browseAllSources(sources: RecipeDiscoverySource[]): Promise<DiscoverFeedResult> {
+  const browsable = sources.filter((s) => s.browseUrl);
+  const settled = await Promise.allSettled(browsable.map((s) => browseRecipeSource(s)));
+  return collectFeedResult(browsable, settled);
 }

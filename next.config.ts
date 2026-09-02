@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
     // Recipes with a video but no uploaded cover fall back to a YouTube
     // thumbnail (see recipeThumbnailUrl) — the only external image host
     // <Image> ever renders.
-    remotePatterns: [{ protocol: "https", hostname: "img.youtube.com" }],
+    remotePatterns: [{ protocol: "https", hostname: "*" }],
   },
 };
 
