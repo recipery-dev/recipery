@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/recipery-dev/recipery/compare/v1.16.0...v1.16.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* Improve drawer dismissal behavior to allow swipe gestures and prevent unwanted closures ([0b53dbf](https://github.com/recipery-dev/recipery/commit/0b53dbfb22c74dc5c772960d173a169002e483d6))
+
 ## [1.16.0](https://github.com/recipery-dev/recipery/compare/v1.15.0...v1.16.0) (2026-09-02)
 
 
