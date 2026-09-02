@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.21.0](https://github.com/recipery-dev/recipery/compare/v1.20.0...v1.21.0) (2026-09-02)
+
+
+### Features
+
+* Add ChefHat icon as fallback for missing recipe images in discover and find similar drawers ([255e91f](https://github.com/recipery-dev/recipery/commit/255e91fabf2d569a0d1d631a52be63c403621509))
+* Implement Discover page with search functionality and improved recipe display ([35d8674](https://github.com/recipery-dev/recipery/commit/35d86749707c0889f5014b0f2f4787b4cd8b583b))
+
 ## [1.20.0](https://github.com/recipery-dev/recipery/compare/v1.19.0...v1.20.0) (2026-09-02)
 
 
