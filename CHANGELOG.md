@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.0](https://github.com/recipery-dev/recipery/compare/v1.19.0...v1.20.0) (2026-09-02)
+
+
+### Features
+
+* Improve drawer closing behavior to prevent UI glitches during transitions ([47c5fb9](https://github.com/recipery-dev/recipery/commit/47c5fb9cbb5c85f5deb682504cfa083d05e380a1))
+* Update NYT Cooking search URL template to include recipe type filter ([36524a4](https://github.com/recipery-dev/recipery/commit/36524a47839186a42584e5c9088bacc4cb372ac8))
+
 ## [1.19.0](https://github.com/recipery-dev/recipery/compare/v1.18.0...v1.19.0) (2026-09-02)
 
 
