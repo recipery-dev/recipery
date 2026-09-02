@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/recipery-dev/recipery/compare/v1.18.0...v1.19.0) (2026-09-02)
+
+
+### Features
+
+* Enhance recipe cover photo handling with removal option and fallback display ([87fa862](https://github.com/recipery-dev/recipery/commit/87fa86225936065684ed23223312cf6ebaa2f98d))
+
 ## [1.18.0](https://github.com/recipery-dev/recipery/compare/v1.17.0...v1.18.0) (2026-09-02)
 
 
