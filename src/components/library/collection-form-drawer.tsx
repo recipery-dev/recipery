@@ -2,14 +2,13 @@
 
 import * as React from "react";
 import {
-  Drawer,
-  DrawerContent,
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
   DrawerFooter,
   DrawerClose,
 } from "@/components/ui/drawer";
+import { SideDrawer } from "@/components/side-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -58,63 +57,60 @@ export function CollectionFormDrawer({
   };
 
   return (
-    <Drawer
+    <SideDrawer
       open={open}
       onOpenChange={onOpenChange}
       modal={false}
       disablePointerDismissal
-      swipeDirection="right"
     >
-      <DrawerContent className="my-3 border-t border-b">
-        <DrawerHeader>
-          <DrawerTitle>{isEditing ? "Edit Collection" : "New Collection"}</DrawerTitle>
-          <DrawerDescription>Give it a name and a color to spot it by.</DrawerDescription>
-        </DrawerHeader>
+      <DrawerHeader>
+        <DrawerTitle>{isEditing ? "Edit Collection" : "New Collection"}</DrawerTitle>
+        <DrawerDescription>Give it a name and a color to spot it by.</DrawerDescription>
+      </DrawerHeader>
 
-        <div className="flex flex-col gap-5 px-4">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="collection-name" className="text-sm font-medium">
-              Name
-            </label>
-            <Input
-              id="collection-name"
-              ref={inputRef}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmit();
-              }}
-              placeholder="e.g. Weeknight Dinners"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Color</p>
-            <div className="flex flex-wrap gap-2">
-              {COLLECTION_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  aria-label={c}
-                  onClick={() => setColor(c)}
-                  className={cn(
-                    "flex size-8 items-center justify-center rounded-full transition-transform hover:scale-110",
-                    c,
-                    color === c && "ring-2 ring-foreground ring-offset-2 ring-offset-popover"
-                  )}
-                />
-              ))}
-            </div>
-          </div>
+      <div className="flex flex-col gap-5 px-4">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="collection-name" className="text-sm font-medium">
+            Name
+          </label>
+          <Input
+            id="collection-name"
+            ref={inputRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSubmit();
+            }}
+            placeholder="e.g. Weeknight Dinners"
+          />
         </div>
 
-        <DrawerFooter className="sm:flex-row sm:justify-end">
-          <DrawerClose render={<Button variant="outline">Cancel</Button>} />
-          <Button onClick={handleSubmit} disabled={!name.trim()}>
-            {isEditing ? "Save changes" : "Create collection"}
-          </Button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Color</p>
+          <div className="flex flex-wrap gap-2">
+            {COLLECTION_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-label={c}
+                onClick={() => setColor(c)}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-full transition-transform hover:scale-110",
+                  c,
+                  color === c && "ring-2 ring-foreground ring-offset-2 ring-offset-popover"
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <DrawerFooter className="sm:flex-row sm:justify-end">
+        <DrawerClose render={<Button variant="outline">Cancel</Button>} />
+        <Button onClick={handleSubmit} disabled={!name.trim()}>
+          {isEditing ? "Save changes" : "Create collection"}
+        </Button>
+      </DrawerFooter>
+    </SideDrawer>
   );
 }

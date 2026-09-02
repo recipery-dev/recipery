@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { SideDrawer } from "@/components/side-drawer";
 import { RecipeDetailPanel } from "./recipe-detail-panel";
 import { RecipeFormDrawer } from "./recipe-form-drawer";
 import { useLibraryShell } from "./library-shell-context";
@@ -33,7 +33,7 @@ export function RecipePreviewDrawer() {
   }, [formDrawer]);
 
   return (
-    <Drawer
+    <SideDrawer
       open={!!selected}
       onOpenChange={(open, eventDetails) => {
         if (open) return;
@@ -58,30 +58,27 @@ export function RecipePreviewDrawer() {
         setSelected(null);
       }}
       modal={false}
-      swipeDirection="right"
     >
-      <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:[--drawer-content-width:94vw]! data-[swipe-axis=x]:sm:[--drawer-content-width:min(36rem,92vw)]!">
-        {displayedRecipe && (
-          <RecipeDetailPanel
-            recipe={displayedRecipe}
-            collections={recipeCardActions.collections}
-            onToggleCollection={recipeCardActions.onToggleCollection}
-            onUpdateRecipe={recipeCardActions.onUpdateRecipe}
-            onDeleteRecipe={recipeCardActions.onDeleteRecipe}
-            onEditRecipe={recipeCardActions.onEditRecipe}
-            onClose={() => setSelected(null)}
-          />
-        )}
-        <RecipeFormDrawer
-          mode="edit"
-          recipe={displayedEditRecipe}
-          open={editingHere}
-          onOpenChange={(open) => {
-            if (!open) closeRecipeForm();
-          }}
-          onSaved={handleRecipeSaved}
+      {displayedRecipe && (
+        <RecipeDetailPanel
+          recipe={displayedRecipe}
+          collections={recipeCardActions.collections}
+          onToggleCollection={recipeCardActions.onToggleCollection}
+          onUpdateRecipe={recipeCardActions.onUpdateRecipe}
+          onDeleteRecipe={recipeCardActions.onDeleteRecipe}
+          onEditRecipe={recipeCardActions.onEditRecipe}
+          onClose={() => setSelected(null)}
         />
-      </DrawerContent>
-    </Drawer>
+      )}
+      <RecipeFormDrawer
+        mode="edit"
+        recipe={displayedEditRecipe}
+        open={editingHere}
+        onOpenChange={(open) => {
+          if (!open) closeRecipeForm();
+        }}
+        onSaved={handleRecipeSaved}
+      />
+    </SideDrawer>
   );
 }
