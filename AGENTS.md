@@ -39,6 +39,16 @@ Concretely, when building or touching any screen:
   to simplify or remove first, not just where to append the new thing.
 - Ask before adding a new UI/component dependency. Minimalism here is a
   constraint on the dependency tree too, not only visual style.
+- Favor DRY over copy-pasting: when the same markup, styling, or logic
+  starts showing up in more than one place, pull it into a shared
+  component/hook instead of repeating it. `src/components/side-drawer.tsx`
+  is the reference pattern — the app's 7 right-side drawers used to each
+  set their own swipe direction, swipe handle, and width; now that lives in
+  one `SideDrawer` wrapper, so a change to any of it (e.g. panel width)
+  updates every drawer at once instead of needing an edit per file. Before
+  building a new screen element, check whether an existing shared component
+  already covers it, and if you're adding a third (or later) copy of the
+  same thing, extract it rather than adding another copy.
 
 If a design decision trades a small amount of functionality for a visibly
 calmer screen, take that trade by default and say so — don't quietly add
