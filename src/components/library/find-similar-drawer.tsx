@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ExternalLink, Loader2, SearchX, Star } from "lucide-react";
+import { ChefHat, ExternalLink, Loader2, SearchX, Star } from "lucide-react";
 import { DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { SideDrawer } from "@/components/side-drawer";
 import { Button } from "@/components/ui/button";
@@ -138,7 +138,9 @@ export function FindSimilarDrawer({ recipe, open, onOpenChange }: FindSimilarDra
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={result.imageUrl} alt="" className="aspect-square w-full object-cover" />
                         ) : (
-                          <div className="aspect-square w-full" />
+                          <div className="flex aspect-square w-full items-center justify-center">
+                            <ChefHat className="size-4 text-foreground/15" strokeWidth={1.5} />
+                          </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
