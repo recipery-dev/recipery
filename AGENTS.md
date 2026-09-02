@@ -27,6 +27,14 @@ Concretely, when building or touching any screen:
   native control. The unit dropdown in `recipe-form-drawer.tsx` (native
   `<select>` with a "Custom…" escape hatch to a text field) is the reference
   pattern — it gives dropdown behavior without new UI dependencies.
+- Prefer an existing or addable shadcn/ui component over hand-rolled markup
+  that duplicates one (e.g. a row of styled `<button>`s standing in for
+  `Tabs`). Check `src/components/ui/` first; if the primitive is missing,
+  use the shadcn MCP server (or `npx shadcn@latest add <component>`) to pull
+  it in rather than writing it from scratch. This project's `components.json`
+  style is `base-nova`, which resolves to the `@base-ui/react`-based variant
+  of each component, not Radix — the CLI/MCP picks that up automatically
+  from `components.json`, so no extra flag is needed.
 - When adding a field or control to an existing screen, look for something
   to simplify or remove first, not just where to append the new thing.
 - Ask before adding a new UI/component dependency. Minimalism here is a

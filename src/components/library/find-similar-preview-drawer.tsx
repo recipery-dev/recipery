@@ -71,7 +71,7 @@ export function FindSimilarPreviewDrawer({ url, open, onOpenChange, onImported }
       : undefined;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} modal={false} swipeDirection="right">
+    <Drawer open={open} onOpenChange={onOpenChange} modal={false} swipeDirection="right" showSwipeHandle>
       <DrawerContent className="my-3 border-t border-b data-[swipe-axis=x]:[--drawer-content-width:94vw]! data-[swipe-axis=x]:sm:[--drawer-content-width:min(36rem,92vw)]!">
         <DrawerHeader>
           <DrawerTitle>Preview</DrawerTitle>

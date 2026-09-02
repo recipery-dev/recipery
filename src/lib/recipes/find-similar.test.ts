@@ -34,7 +34,7 @@ describe("searchRecipeSource", () => {
     );
   }
 
-  it("parses NYT Cooking's __NEXT_DATA__ recipe and article cards", async () => {
+  it("parses NYT Cooking's __NEXT_DATA__ recipe cards and drops article cards", async () => {
     const html = `<html><body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify({
       props: {
         pageProps: {
@@ -66,19 +66,9 @@ describe("searchRecipeSource", () => {
         id: "1026425",
         title: "Smashed Beef Kebab With Cucumber Yogurt",
         url: "https://cooking.nytimes.com/recipes/1026425-smashed-beef-kebab-with-cucumber-yogurt",
-        type: "recipe",
         imageUrl: "https://static01.nyt.com/image.jpg",
         time: "25 minutes",
         rating: 5,
-      },
-      {
-        id: "100000006408165",
-        title: "17 St. Patrick's Day Recipes",
-        url: "https://cooking.nytimes.com/article/st-patricks-day-recipes",
-        type: "article",
-        imageUrl: undefined,
-        time: undefined,
-        rating: undefined,
       },
     ]);
   });
@@ -128,7 +118,6 @@ describe("searchRecipeSource", () => {
         id: "266533",
         title: "Chinese-style braised beef one-pot",
         url: "https://www.bbcgoodfood.com/recipes/braised-beef-onepot",
-        type: "recipe",
         imageUrl: "https://images.immediate.co.uk/beef.jpg",
         time: "6 hrs 10 mins",
         rating: 4.7,
@@ -137,7 +126,6 @@ describe("searchRecipeSource", () => {
         id: "228702",
         title: "Braised beef with ginger",
         url: "https://www.bbcgoodfood.com/recipes/chinese-braised-beef-ginger",
-        type: "recipe",
         imageUrl: "https://images.immediate.co.uk/ginger.jpg",
         time: "3 hrs 35 mins",
         rating: 4.7,
@@ -172,28 +160,35 @@ describe("searchRecipeSource", () => {
         id: "https://example.com/recipes/beef-stew",
         title: "Beef Stew",
         url: "https://example.com/recipes/beef-stew",
-        type: "recipe",
         imageUrl: "https://example.com/beef-stew.jpg",
       },
       {
         id: "https://example.com/recipes/beef-tacos",
         title: "Beef Tacos",
         url: "https://example.com/recipes/beef-tacos",
-        type: "recipe",
         imageUrl: undefined,
       },
     ]);
   });
 
-  it("falls back to a slug-derived title for an ItemList with bare URLs (e.g. bbc.co.uk/food)", async () => {
-    const html = `<html><body><script type="application/ld+json">${JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, url: "https://www.bbc.co.uk/food/recipes/roast_beef_dinner_76669" },
-        { "@type": "ListItem", position: 2, url: "https://www.bbc.co.uk/food/recipes/slow-cooker_sunday_roast_64729" },
-      ],
-    })}</script></body></html>`;
+  it("falls back to a slug-derived title and image for an ItemList with bare URLs (e.g. bbc.co.uk/food)", async () => {
+    const cardHtml = (slug: string) =>
+      `<a href="https://www.bbc.co.uk/food/recipes/${slug}"><img src="https://ichef.bbci.co.uk/food/ic/food_16x9_832/recipes/${slug}_16x9.jpg"></a>`;
+    const html = `<html><body>
+      ${cardHtml("roast_beef_dinner_76669")}
+      ${cardHtml("slow-cooker_sunday_roast_64729")}
+      <script type="application/ld+json">${JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, url: "https://www.bbc.co.uk/food/recipes/roast_beef_dinner_76669" },
+          {
+            "@type": "ListItem",
+            position: 2,
+            url: "https://www.bbc.co.uk/food/recipes/slow-cooker_sunday_roast_64729",
+          },
+        ],
+      })}</script></body></html>`;
     stubFetch(html);
 
     const source: RecipeDiscoverySource = {
@@ -207,15 +202,13 @@ describe("searchRecipeSource", () => {
         id: "https://www.bbc.co.uk/food/recipes/roast_beef_dinner_76669",
         title: "Roast Beef Dinner",
         url: "https://www.bbc.co.uk/food/recipes/roast_beef_dinner_76669",
-        type: "recipe",
-        imageUrl: undefined,
+        imageUrl: "https://ichef.bbci.co.uk/food/ic/food_16x9_832/recipes/roast_beef_dinner_76669_16x9.jpg",
       },
       {
         id: "https://www.bbc.co.uk/food/recipes/slow-cooker_sunday_roast_64729",
         title: "Slow Cooker Sunday Roast",
         url: "https://www.bbc.co.uk/food/recipes/slow-cooker_sunday_roast_64729",
-        type: "recipe",
-        imageUrl: undefined,
+        imageUrl: "https://ichef.bbci.co.uk/food/ic/food_16x9_832/recipes/slow-cooker_sunday_roast_64729_16x9.jpg",
       },
     ]);
   });

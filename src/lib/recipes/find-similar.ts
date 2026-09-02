@@ -31,7 +31,6 @@ export interface SimilarRecipeResult {
   id: string;
   title: string;
   url: string;
-  type: "recipe" | "article";
   imageUrl?: string;
   time?: string;
   rating?: number;
@@ -112,7 +111,10 @@ function findLargestCardArray(pageProps: JsonNode): JsonNode[] | null {
 }
 
 function normalizeNextDataCard(node: JsonNode, baseUrl: string): SimilarRecipeResult | null {
-  // Recipe cards usually carry `title`, article/link cards sometimes carry `name` instead.
+  // Search pages mix recipe cards in with article/roundup cards (marked by
+  // `type`/`postType`) — "Find Similar" only wants actual recipes.
+  if (node.type === "article" || node.postType === "article") return null;
+
   const title = String(node.title ?? node.name ?? "")
     .replace(/\s+/g, " ")
     .trim();
@@ -139,7 +141,6 @@ function normalizeNextDataCard(node: JsonNode, baseUrl: string): SimilarRecipeRe
     id: String(node.id ?? url),
     title,
     url,
-    type: node.type === "article" || node.postType === "article" ? "article" : "recipe",
     imageUrl: normalizeImage(node.image),
     time,
     rating,
@@ -170,19 +171,21 @@ function parseNextDataResults(html: string, baseUrl: string): SimilarRecipeResul
 
 // --- Strategy 2: a generic schema.org ItemList -------------------------------
 
+function urlSlug(url: string): string | undefined {
+  try {
+    return new URL(url).pathname.split("/").filter(Boolean).pop();
+  } catch {
+    return undefined;
+  }
+}
+
 /** Some sites' ItemList markup is just a bare list of URLs for search-engine
  * crawling, with no `name` for display (e.g. bbc.co.uk/food). Falls back to
  * a guess built from the URL's last path segment so the item still shows up
  * with something recognizable — the real title still comes through once the
  * user opens the preview drawer and it's actually scraped from the page. */
 function humanizeSlugTitle(url: string): string | undefined {
-  let path: string;
-  try {
-    path = new URL(url).pathname;
-  } catch {
-    return undefined;
-  }
-  const slug = path.split("/").filter(Boolean).pop();
+  const slug = urlSlug(url);
   if (!slug) return undefined;
   const words = slug
     .replace(/[-_]\d+$/, "")
@@ -192,7 +195,17 @@ function humanizeSlugTitle(url: string): string | undefined {
   return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
-function normalizeItemListElement(element: JsonNode, baseUrl: string): SimilarRecipeResult | null {
+/** Finds a plain `<img src="...">` on the page whose URL contains the given
+ * slug — some sites' ItemList entries carry neither a name nor an image
+ * (e.g. bbc.co.uk/food), but still render a thumbnail per card with a src
+ * that matches the same slug as the recipe's own URL. */
+function findImageForSlug(html: string, slug: string): string | undefined {
+  const escaped = slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = html.match(new RegExp(`<img[^>]+src=["']([^"']*${escaped}[^"']*)["']`, "i"));
+  return match?.[1];
+}
+
+function normalizeItemListElement(element: JsonNode, baseUrl: string, html: string): SimilarRecipeResult | null {
   const item = element.item && typeof element.item === "object" ? (element.item as JsonNode) : element;
   const rawUrl = typeof item.url === "string" ? item.url : typeof element.url === "string" ? element.url : undefined;
   if (!rawUrl) return null;
@@ -204,13 +217,10 @@ function normalizeItemListElement(element: JsonNode, baseUrl: string): SimilarRe
   const title = name?.trim() || humanizeSlugTitle(url);
   if (!title) return null;
 
-  return {
-    id: url,
-    title,
-    url,
-    type: "recipe",
-    imageUrl: normalizeImage(item.image ?? element.image),
-  };
+  const slug = urlSlug(url);
+  const imageUrl = normalizeImage(item.image ?? element.image) ?? (slug ? findImageForSlug(html, slug) : undefined);
+
+  return { id: url, title, url, imageUrl };
 }
 
 function collectItemLists(node: unknown, into: JsonNode[]): void {
@@ -239,7 +249,7 @@ function parseItemListResults(html: string, baseUrl: string): SimilarRecipeResul
 
   return lists
     .flatMap((list) => list.itemListElement as unknown[])
-    .map((el) => normalizeItemListElement(el as JsonNode, baseUrl))
+    .map((el) => normalizeItemListElement(el as JsonNode, baseUrl, html))
     .filter((r): r is SimilarRecipeResult => r !== null);
 }
 
