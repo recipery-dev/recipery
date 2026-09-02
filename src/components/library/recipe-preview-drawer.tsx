@@ -36,21 +36,25 @@ export function RecipePreviewDrawer() {
     <Drawer
       open={!!selected}
       onOpenChange={(open, eventDetails) => {
-        // For closing (open = false), only block outside-dismissal when another
-        // overlay appears. Always allow swipe gestures to close normally.
         if (open) return;
-
+        // Non-modal drawers close on outside press/focus-out by default,
+        // which would otherwise fire when the edit drawer (or the rate/
+        // delete dialogs) opens on top of this one — their content is
+        // "outside" this drawer's own DOM. Ignore the dismissal when the
+        // interaction lands inside another overlay instead of the page
+        // behind it, so a real outside click still closes the preview.
         const reason = eventDetails.reason;
-        // Only cancel outside dismissal if clicking on a nested dialog (edit drawer).
-        // Otherwise let the default behavior apply (swipe, tap, etc. all work).
-        if (reason === "focus-out") {
-          const relevantTarget = (eventDetails.event as FocusEvent).relatedTarget;
-          if (relevantTarget?.closest('[role="dialog"], [role="alertdialog"]')) {
-            eventDetails.cancel();
-            return;
-          }
+        const relevantTarget =
+          reason === "focus-out"
+            ? (eventDetails.event as FocusEvent).relatedTarget
+            : (eventDetails.event as Event).target;
+        if (
+          relevantTarget instanceof Element &&
+          relevantTarget.closest('[role="dialog"], [role="alertdialog"]')
+        ) {
+          eventDetails.cancel();
+          return;
         }
-
         setSelected(null);
       }}
       modal={false}
