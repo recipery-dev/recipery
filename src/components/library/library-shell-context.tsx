@@ -64,6 +64,7 @@ interface LibraryShellContextValue {
   setDiscoverQuery: (query: string) => void;
   discoverSubmittedQuery: string;
   submitDiscoverQuery: (query: string) => void;
+  appVersion: string;
 }
 
 const LibraryShellContext =
@@ -81,6 +82,7 @@ interface LibraryShellProviderProps {
   profiles: PublicProfile[];
   activeProfileId: string;
   settings: PublicAppSettings;
+  appVersion: string;
   children: React.ReactNode;
 }
 
@@ -89,6 +91,7 @@ export function LibraryShellProvider({
   profiles,
   activeProfileId,
   settings,
+  appVersion,
   children,
 }: LibraryShellProviderProps) {
   const router = useRouter();
@@ -372,6 +375,7 @@ export function LibraryShellProvider({
     setDiscoverQuery,
     discoverSubmittedQuery,
     submitDiscoverQuery,
+    appVersion,
   };
 
   return (

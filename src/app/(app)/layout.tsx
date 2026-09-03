@@ -7,6 +7,7 @@ import { applyProfileState, getProfileState } from "@/lib/profiles/state";
 import { getSettings } from "@/lib/settings/store";
 import { toPublicSettings } from "@/lib/settings/types";
 import { toPublicProfile } from "@/lib/profiles/types";
+import { APP_VERSION } from "@/lib/app-version";
 import { LibraryShellProvider } from "@/components/library/library-shell-context";
 import { AppShell } from "@/components/library/app-shell";
 
@@ -38,6 +39,7 @@ export default async function AppGroupLayout({
         profiles={profiles.map(toPublicProfile)}
         activeProfileId={activeProfile.id}
         settings={toPublicSettings(settings)}
+        appVersion={APP_VERSION}
       >
         <AppShell defaultSidebarOpen={sidebarOpen}>{children}</AppShell>
       </LibraryShellProvider>

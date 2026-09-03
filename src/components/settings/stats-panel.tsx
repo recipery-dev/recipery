@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, ChefHat, FolderOpen, Heart, Star, Users } from "lucide-react";
+import { BookOpen, ChefHat, FolderOpen, Heart, Star, Tag, Users } from "lucide-react";
 import { useLibraryShell } from "@/components/library/library-shell-context";
 
 function StatTile({
@@ -27,7 +27,7 @@ function StatTile({
 }
 
 export function StatsPanel() {
-  const { recipes, collections, profiles } = useLibraryShell();
+  const { recipes, collections, profiles, appVersion } = useLibraryShell();
 
   const { favorites, cooked, avgRating } = React.useMemo(() => {
     const rated = recipes.filter((r) => r.rating);
@@ -54,6 +54,7 @@ export function StatsPanel() {
         <StatTile icon={Heart} label="Favorited" value={String(favorites)} />
         <StatTile icon={ChefHat} label="Cooked" value={String(cooked)} />
         <StatTile icon={Star} label="Avg rating" value={avgRating ?? "—"} />
+        <StatTile icon={Tag} label="Version" value={appVersion} />
       </div>
     </div>
   );

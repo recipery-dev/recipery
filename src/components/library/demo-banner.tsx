@@ -10,7 +10,7 @@ export function DemoBanner() {
       <span>
         This is a read-only demo — changes aren&rsquo;t saved.{" "}
         <a
-          href="https://docs.recipery.dev/deployment/cloudflare/"
+          href="https://docs.recipery.dev/deployment/docker/"
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-foreground underline underline-offset-2 hover:text-foreground/80"
