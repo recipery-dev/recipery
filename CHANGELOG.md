@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.0](https://github.com/recipery-dev/recipery/compare/v1.22.0...v1.23.0) (2026-09-03)
+
+
+### Features
+
+* Update Find Similar functionality to navigate to Discover page with recipe title query ([5c70d92](https://github.com/recipery-dev/recipery/commit/5c70d922fa346224d4cd53cd04f263741c76bf20))
+
 ## [1.22.0](https://github.com/recipery-dev/recipery/compare/v1.21.0...v1.22.0) (2026-09-03)
 
 
