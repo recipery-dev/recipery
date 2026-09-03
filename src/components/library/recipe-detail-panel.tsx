@@ -1,14 +1,15 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   ChefHat,
   Clock,
+  Compass,
   FolderPlus,
   MoreVertical,
   Heart,
   Printer,
-  Search,
   ShoppingCart,
   Trash2,
   Minus,
@@ -16,7 +17,6 @@ import {
   Play,
 } from "lucide-react";
 import { RateDialog } from "./rate-dialog";
-import { FindSimilarDrawer } from "./find-similar-drawer";
 import { RecipePhoto } from "./recipe-photo";
 import { IngredientChecklist } from "./ingredient-checklist";
 import { getRecipeMenuActions } from "./recipe-menu-actions";
@@ -79,9 +79,9 @@ export function RecipeDetailPanel({
   onDeleteRecipe,
   onEditRecipe,
 }: RecipeDetailPanelProps) {
+  const router = useRouter();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
-  const [findSimilarOpen, setFindSimilarOpen] = React.useState(false);
   const [checked, setChecked] = React.useState<Set<string>>(new Set());
   const {
     activeProfile,
@@ -92,6 +92,7 @@ export function RecipeDetailPanel({
     servings,
     setServings,
     setCookMode,
+    submitDiscoverQuery,
   } = useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
 
@@ -318,8 +319,13 @@ export function RecipeDetailPanel({
                     {action.label}
                   </DropdownMenuItem>
                 ))}
-              <DropdownMenuItem onClick={() => setFindSimilarOpen(true)}>
-                <Search className="size-3.5" />
+              <DropdownMenuItem
+                onClick={() => {
+                  submitDiscoverQuery(recipe.title);
+                  router.push("/discover");
+                }}
+              >
+                <Compass className="size-3.5" />
                 Find Similar
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => window.print()}>
@@ -448,12 +454,6 @@ export function RecipeDetailPanel({
         open={rateDialogOpen}
         onOpenChange={setRateDialogOpen}
         onRate={(rating) => onUpdateRecipe(recipe.id, { rating })}
-      />
-
-      <FindSimilarDrawer
-        recipe={recipe}
-        open={findSimilarOpen}
-        onOpenChange={setFindSimilarOpen}
       />
 
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
