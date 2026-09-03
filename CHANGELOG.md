@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/recipery-dev/recipery/compare/v1.21.0...v1.22.0) (2026-09-03)
+
+
+### Features
+
+* Add application version display and update demo link in layout ([211eea6](https://github.com/recipery-dev/recipery/commit/211eea68b1ca6db54eec38c8662523494ac1a86f))
+
 ## [1.21.0](https://github.com/recipery-dev/recipery/compare/v1.20.0...v1.21.0) (2026-09-02)
 
 
