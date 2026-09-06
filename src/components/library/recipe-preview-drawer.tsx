@@ -53,6 +53,19 @@ export function RecipePreviewDrawer() {
             return;
           }
         }
+        // Cook Mode renders as a fixed-overlay sibling of this drawer, not
+        // nested inside it, so pressing any of its buttons registers as an
+        // outside press on this still-open, non-modal drawer. Left
+        // unguarded, that closed the drawer (dropping ?recipe from the URL)
+        // while Cook Mode's own ?cook=1 stayed put, so the next recipe
+        // opened jumped straight into Cook Mode.
+        if (eventDetails.reason === "outside-press") {
+          const target = eventDetails.event.target;
+          if (target instanceof Element && target.closest('[role="dialog"], [role="alertdialog"]')) {
+            eventDetails.cancel();
+            return;
+          }
+        }
         setSelected(null);
       }}
       modal={false}
