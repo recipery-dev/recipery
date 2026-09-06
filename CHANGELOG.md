@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/recipery-dev/recipery/compare/v1.23.0...v1.24.0) (2026-09-06)
+
+
+### Features
+
+* Prevent drawer closure on outside press when Cook Mode is active ([3b529ed](https://github.com/recipery-dev/recipery/commit/3b529ed599661f0cfbae652109379ea6595bb3da))
+
 ## [1.23.0](https://github.com/recipery-dev/recipery/compare/v1.22.0...v1.23.0) (2026-09-03)
 
 
