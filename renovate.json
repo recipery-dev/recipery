@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitsDisabled"],
+  "commitMessagePrefix": "chore(deps):",
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Berlin",
+  "prConcurrentLimit": 5,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": false
+  },
+  "packageRules": [
+    {
+      "description": "One PR for all non-major npm updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Majors get their own PR and a label, so they are easy to review",
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major"]
+    },
+    {
+      "description": "Next.js and its config move together with the Cloudflare adapter",
+      "matchPackageNames": ["next", "eslint-config-next", "@opennextjs/cloudflare"],
+      "groupName": "next",
+      "matchUpdateTypes": ["major"]
+    },
+    {
+      "description": "Keep @types/node on the Node version we run (Dockerfile and CI use 22)",
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23"
+    },
+    {
+      "description": "One PR for GitHub Actions and Docker base image updates",
+      "matchManagers": ["github-actions", "dockerfile", "docker-compose"],
+      "groupName": "ci and docker"
+    },
+    {
+      "description": "The Node major is our runtime choice, not an automatic bump",
+      "matchPackageNames": ["node"],
+      "matchDatasources": ["docker", "node-version"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}
