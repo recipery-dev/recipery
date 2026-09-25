@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":semanticCommitsDisabled"],
   "commitMessagePrefix": "chore(deps):",
-  "schedule": ["before 6am on monday"],
   "timezone": "Europe/Berlin",
   "prConcurrentLimit": 5,
   "lockFileMaintenance": {
