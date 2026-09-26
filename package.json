@@ -40,7 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^10.0.0",
     "eslint-config-next": "15.5.25",
     "jsdom": "^30.0.1",
     "shadcn": "^4.19.1",
