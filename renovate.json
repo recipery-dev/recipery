@@ -40,7 +40,6 @@
     {
       "description": "The Node major is our runtime choice, not an automatic bump",
       "matchPackageNames": ["node"],
-      "matchDatasources": ["docker", "node-version"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     }
