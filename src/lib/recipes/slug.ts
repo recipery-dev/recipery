@@ -12,3 +12,11 @@ export function slugify(text: string): string {
     .replace(/-+$/g, "");
   return slug || "recipe";
 }
+
+/** Appends `-2`, `-3`, … to `baseSlug` until it's not in `taken`. */
+export function uniqueSlug(baseSlug: string, taken: Set<string>): string {
+  if (!taken.has(baseSlug)) return baseSlug;
+  let n = 2;
+  while (taken.has(`${baseSlug}-${n}`)) n++;
+  return `${baseSlug}-${n}`;
+}

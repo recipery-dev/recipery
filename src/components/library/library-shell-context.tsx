@@ -278,6 +278,24 @@ export function LibraryShellProvider({
     handleRecipeUpdated(data.recipe as RecipeRecord);
   };
 
+  const handleDuplicateRecipe = async (recipeId: string) => {
+    const res = await fetch(`/api/recipes/${recipeId}/duplicate`, {
+      method: "POST",
+    });
+    if (!res.ok) {
+      toast.add({ title: "Failed to duplicate recipe", type: "error" });
+      return;
+    }
+    const data = await res.json();
+    handleCreated(data.recipe as RecipeRecord);
+    setRecipeParam(data.recipe.id);
+    toast.add({
+      title: "Recipe duplicated",
+      description: `"${data.recipe.title}" was added to your library`,
+      type: "success",
+    });
+  };
+
   const handleDeleteRecipe = async (recipeId: string) => {
     const title = recipes.find((r) => r.id === recipeId)?.title;
     const res = await fetch(`/api/recipes/${recipeId}`, { method: "DELETE" });
@@ -333,6 +351,7 @@ export function LibraryShellProvider({
     onUpdateRecipe: handleUpdateRecipe,
     onDeleteRecipe: handleDeleteRecipe,
     onEditRecipe: openEditRecipe,
+    onDuplicateRecipe: handleDuplicateRecipe,
   };
 
   const activeProfile =

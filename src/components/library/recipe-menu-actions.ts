@@ -1,4 +1,4 @@
-import { ChefHat, Heart, Pencil, Star, type LucideIcon } from "lucide-react";
+import { ChefHat, Copy, Heart, Pencil, Star, type LucideIcon } from "lucide-react";
 import type { Recipe, RecipeRecord } from "@/lib/recipes/types";
 
 export interface RecipeMenuAction {
@@ -12,6 +12,7 @@ interface RecipeMenuActionsArgs {
   recipe: Recipe;
   onUpdateRecipe: (recipeId: string, patch: { rating?: number; favorite?: boolean; cooked?: boolean }) => void;
   onEditRecipe: (recipe: RecipeRecord) => void;
+  onDuplicateRecipe: (recipeId: string) => void;
   onRate: () => void;
 }
 
@@ -26,6 +27,7 @@ export function getRecipeMenuActions({
   recipe,
   onUpdateRecipe,
   onEditRecipe,
+  onDuplicateRecipe,
   onRate,
 }: RecipeMenuActionsArgs): RecipeMenuAction[] {
   return [
@@ -53,5 +55,29 @@ export function getRecipeMenuActions({
       label: "Edit",
       onClick: () => onEditRecipe(recipe),
     },
+    {
+      key: "duplicate",
+      icon: Copy,
+      label: "Duplicate",
+      onClick: () => onDuplicateRecipe(recipe.id),
+    },
   ];
+}
+
+const MODIFY_KEYS = new Set(["edit", "duplicate"]);
+
+/**
+ * Splits `getRecipeMenuActions`'s flat list into the two menu sections both
+ * call sites render separately (engagement actions, then actions that
+ * change the recipe itself) — one place to adjust the split instead of
+ * matching key lists by hand in each menu.
+ */
+export function splitRecipeMenuActions(actions: RecipeMenuAction[]): {
+  engage: RecipeMenuAction[];
+  modify: RecipeMenuAction[];
+} {
+  return {
+    engage: actions.filter((a) => !MODIFY_KEYS.has(a.key)),
+    modify: actions.filter((a) => MODIFY_KEYS.has(a.key)),
+  };
 }

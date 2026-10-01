@@ -4,7 +4,7 @@ import * as React from "react";
 import { Check, FolderPlus, Play, ShoppingCart, Trash2 } from "lucide-react";
 import { RecipeTile, recipeTileClassName } from "./recipe-tile";
 import { RateDialog } from "./rate-dialog";
-import { getRecipeMenuActions } from "./recipe-menu-actions";
+import { getRecipeMenuActions, splitRecipeMenuActions } from "./recipe-menu-actions";
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -38,6 +38,7 @@ export interface RecipeCardActions {
   onUpdateRecipe: (recipeId: string, patch: { rating?: number; favorite?: boolean; cooked?: boolean }) => void;
   onDeleteRecipe: (recipeId: string) => void;
   onEditRecipe: (recipe: RecipeRecord) => void;
+  onDuplicateRecipe: (recipeId: string) => void;
 }
 
 interface RecipeCardProps {
@@ -50,12 +51,22 @@ interface RecipeCardProps {
 }
 
 export function RecipeCard({ recipe, selected, onSelect, actions, index = 0 }: RecipeCardProps) {
-  const { collections, onToggleCollection, onUpdateRecipe, onDeleteRecipe, onEditRecipe } = actions;
+  const { collections, onToggleCollection, onUpdateRecipe, onDeleteRecipe, onEditRecipe, onDuplicateRecipe } =
+    actions;
   const [rateDialogOpen, setRateDialogOpen] = React.useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
   const { activeProfile, shoppingList, addRecipeToShoppingList, removeRecipeFromShoppingList } =
     useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
+  const { engage: engageActions, modify: modifyActions } = splitRecipeMenuActions(
+    getRecipeMenuActions({
+      recipe,
+      onUpdateRecipe,
+      onEditRecipe,
+      onDuplicateRecipe,
+      onRate: () => setRateDialogOpen(true),
+    }),
+  );
 
   return (
     <ContextMenu>
@@ -147,12 +158,14 @@ export function RecipeCard({ recipe, selected, onSelect, actions, index = 0 }: R
           Add to shopping list
         </ContextMenuCheckboxItem>
         <ContextMenuSeparator />
-        {getRecipeMenuActions({
-          recipe,
-          onUpdateRecipe,
-          onEditRecipe,
-          onRate: () => setRateDialogOpen(true),
-        }).map((action) => (
+        {engageActions.map((action) => (
+          <ContextMenuItem key={action.key} onClick={action.onClick}>
+            <action.icon className="size-3.5" />
+            {action.label}
+          </ContextMenuItem>
+        ))}
+        <ContextMenuSeparator />
+        {modifyActions.map((action) => (
           <ContextMenuItem key={action.key} onClick={action.onClick}>
             <action.icon className="size-3.5" />
             {action.label}

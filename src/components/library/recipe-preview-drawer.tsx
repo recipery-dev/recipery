@@ -78,6 +78,7 @@ export function RecipePreviewDrawer() {
           onUpdateRecipe={recipeCardActions.onUpdateRecipe}
           onDeleteRecipe={recipeCardActions.onDeleteRecipe}
           onEditRecipe={recipeCardActions.onEditRecipe}
+          onDuplicateRecipe={recipeCardActions.onDuplicateRecipe}
         />
       )}
       <RecipeFormDrawer

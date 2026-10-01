@@ -2,20 +2,13 @@ import { NextResponse } from "next/server";
 import { getStorage } from "@/lib/storage";
 import { mutateJson, readJson } from "@/lib/store";
 import { getSettings } from "@/lib/settings/store";
-import { slugify } from "@/lib/recipes/slug";
+import { slugify, uniqueSlug } from "@/lib/recipes/slug";
 import { parseIngredientsField, parseStepsField, parseTagsField, extToFor } from "@/lib/recipes/form";
 import type { RecipeRecord, RecipeDifficulty } from "@/lib/recipes/types";
 
 export async function GET() {
   const index = (await readJson<RecipeRecord[]>("index.json")) ?? [];
   return NextResponse.json({ recipes: index });
-}
-
-function uniqueSlug(baseSlug: string, taken: Set<string>): string {
-  if (!taken.has(baseSlug)) return baseSlug;
-  let n = 2;
-  while (taken.has(`${baseSlug}-${n}`)) n++;
-  return `${baseSlug}-${n}`;
 }
 
 function numberField(form: FormData, key: string): number | undefined {

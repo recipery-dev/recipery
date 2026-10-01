@@ -19,7 +19,7 @@ import {
 import { RateDialog } from "./rate-dialog";
 import { RecipePhoto } from "./recipe-photo";
 import { IngredientChecklist } from "./ingredient-checklist";
-import { getRecipeMenuActions } from "./recipe-menu-actions";
+import { getRecipeMenuActions, splitRecipeMenuActions } from "./recipe-menu-actions";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -69,6 +69,7 @@ interface RecipeDetailPanelProps {
   ) => void;
   onDeleteRecipe: (recipeId: string) => void;
   onEditRecipe: (recipe: RecipeRecord) => void;
+  onDuplicateRecipe: (recipeId: string) => void;
 }
 
 export function RecipeDetailPanel({
@@ -78,6 +79,7 @@ export function RecipeDetailPanel({
   onUpdateRecipe,
   onDeleteRecipe,
   onEditRecipe,
+  onDuplicateRecipe,
 }: RecipeDetailPanelProps) {
   const router = useRouter();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
@@ -95,6 +97,16 @@ export function RecipeDetailPanel({
     submitDiscoverQuery,
   } = useLibraryShell();
   const isAdmin = activeProfile.role === "admin";
+  // Favorite already has its own button up top — no need for it twice.
+  const { engage: engageActions, modify: modifyActions } = splitRecipeMenuActions(
+    getRecipeMenuActions({
+      recipe,
+      onUpdateRecipe,
+      onEditRecipe,
+      onDuplicateRecipe,
+      onRate: () => setRateDialogOpen(true),
+    }).filter((action) => action.key !== "favorite"),
+  );
 
   // A different recipe was opened — reset the checklist rather than
   // carrying over the previous recipe's state. (The servings scaler is
@@ -305,20 +317,20 @@ export function RecipeDetailPanel({
                 Add to shopping list
               </DropdownMenuCheckboxItem>
               <DropdownMenuSeparator />
-              {getRecipeMenuActions({
-                recipe,
-                onUpdateRecipe,
-                onEditRecipe,
-                onRate: () => setRateDialogOpen(true),
-              })
-                // Favorite already has its own button up top — no need for it twice.
-                .filter((action) => action.key !== "favorite")
-                .map((action) => (
-                  <DropdownMenuItem key={action.key} onClick={action.onClick}>
-                    <action.icon className="size-3.5" />
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
+              {engageActions.map((action) => (
+                <DropdownMenuItem key={action.key} onClick={action.onClick}>
+                  <action.icon className="size-3.5" />
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              {modifyActions.map((action) => (
+                <DropdownMenuItem key={action.key} onClick={action.onClick}>
+                  <action.icon className="size-3.5" />
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   submitDiscoverQuery(recipe.title);
