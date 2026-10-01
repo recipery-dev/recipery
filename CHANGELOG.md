@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/recipery-dev/recipery/compare/v1.25.0...v1.26.0) (2026-10-01)
+
+
+### Features
+
+* enhance ingredient handling with section headers and drag-and-drop support ([0c0680e](https://github.com/recipery-dev/recipery/commit/0c0680ef1cfc1c7dd6416b47944b4d85ce27db81))
+
 ## [1.25.0](https://github.com/recipery-dev/recipery/compare/v1.24.0...v1.25.0) (2026-10-01)
 
 
