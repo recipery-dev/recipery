@@ -28,9 +28,16 @@ export function RecipePreviewDrawer() {
   // plays — `formDrawer` clears to null immediately on close.
   const editingHere = !!selected && formDrawer?.mode === "edit";
   const [displayedEditRecipe, setDisplayedEditRecipe] = React.useState<RecipeRecord | undefined>(undefined);
-  React.useEffect(() => {
-    if (formDrawer?.mode === "edit") setDisplayedEditRecipe(formDrawer.recipe);
-  }, [formDrawer]);
+  // Adjusted during render, not in a useEffect — an effect runs a render
+  // after `editingHere` (and so RecipeFormDrawer's `open` prop) flips true,
+  // so reopening Edit on the same recipe right after saving it used to
+  // hand RecipeFormDrawer `open=true` together with the previous render's
+  // stale recipe; its own reset effect only reruns on an `open`/id change,
+  // so that stale data just stuck. Updating here instead lands in the same
+  // render as `open` turning true.
+  if (formDrawer?.mode === "edit" && formDrawer.recipe !== displayedEditRecipe) {
+    setDisplayedEditRecipe(formDrawer.recipe);
+  }
 
   return (
     <SideDrawer
