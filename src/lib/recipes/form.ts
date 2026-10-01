@@ -22,13 +22,18 @@ export function parseIngredientsField(raw: FormDataEntryValue | null): RecipeIng
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter((i) => i && typeof i === "object" && typeof i.name === "string" && i.name.trim())
-      .map((i) => ({
-        id: typeof i.id === "string" && i.id ? i.id : crypto.randomUUID(),
-        quantity: typeof i.quantity === "string" && i.quantity.trim() ? i.quantity.trim() : undefined,
-        unit: typeof i.unit === "string" && i.unit.trim() ? i.unit.trim() : undefined,
-        name: i.name.trim(),
-        note: typeof i.note === "string" && i.note.trim() ? i.note.trim() : undefined,
-      }));
+      .map((i) => {
+        const isGroup = !!i.isGroup;
+        return {
+          id: typeof i.id === "string" && i.id ? i.id : crypto.randomUUID(),
+          // A group row is just a section label — quantity/unit/note never apply.
+          quantity: !isGroup && typeof i.quantity === "string" && i.quantity.trim() ? i.quantity.trim() : undefined,
+          unit: !isGroup && typeof i.unit === "string" && i.unit.trim() ? i.unit.trim() : undefined,
+          name: i.name.trim(),
+          note: !isGroup && typeof i.note === "string" && i.note.trim() ? i.note.trim() : undefined,
+          isGroup: isGroup || undefined,
+        };
+      });
   } catch {
     return [];
   }

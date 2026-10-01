@@ -15,9 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { ClipboardPaste, ImageUp, Loader2, Plus, Trash2, ChevronDown, X } from "lucide-react";
+import { ClipboardPaste, GripVertical, Heading, ImageUp, Loader2, Plus, Trash2, ChevronDown, X } from "lucide-react";
 import { recipeCoverUrl, recipeStepImageUrl, type RecipeDifficulty, type RecipeRecord } from "@/lib/recipes/types";
 import { parseIngredientListText } from "@/lib/recipes/ingredient-text";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 
 // Common cooking units for the dropdown — anything else falls back to a free-text "Custom…" field.
 const UNIT_OPTIONS = [
@@ -57,6 +58,8 @@ interface IngredientRow {
   customUnit: boolean;
   name: string;
   note: string;
+  /** a section header ("Filling") rather than a real ingredient — see RecipeIngredient */
+  isGroup: boolean;
 }
 
 interface StepRow {
@@ -70,7 +73,11 @@ interface StepRow {
 }
 
 function newIngredientRow(): IngredientRow {
-  return { id: crypto.randomUUID(), quantity: "", unit: "", customUnit: false, name: "", note: "" };
+  return { id: crypto.randomUUID(), quantity: "", unit: "", customUnit: false, name: "", note: "", isGroup: false };
+}
+
+function newGroupRow(): IngredientRow {
+  return { id: crypto.randomUUID(), quantity: "", unit: "", customUnit: false, name: "", note: "", isGroup: true };
 }
 
 function newStepRow(): StepRow {
@@ -86,6 +93,7 @@ function fromRecord(record?: RecipeRecord) {
         customUnit: !!i.unit && !UNIT_OPTIONS.includes(i.unit),
         name: i.name,
         note: i.note ?? "",
+        isGroup: !!i.isGroup,
       }))
     : [newIngredientRow()];
 
@@ -194,8 +202,10 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
     setIngredients((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   };
   const addIngredient = () => setIngredients((prev) => [...prev, newIngredientRow()]);
+  const addGroup = () => setIngredients((prev) => [...prev, newGroupRow()]);
   const removeIngredient = (id: string) =>
     setIngredients((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
+  const ingredientDrag = useDragReorder(setIngredients);
 
   const [bulkOpen, setBulkOpen] = React.useState(false);
   const [bulkText, setBulkText] = React.useState("");
@@ -209,6 +219,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       customUnit: !!p.unit && !UNIT_OPTIONS.includes(p.unit),
       name: p.name,
       note: "",
+      isGroup: !!p.isGroup,
     }));
     // Drop the empty placeholder row(s) rather than leaving a blank row
     // mixed in with the newly pasted ones.
@@ -232,20 +243,7 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
       imageUpdatedAt: undefined,
     });
 
-  const [draggedStepId, setDraggedStepId] = React.useState<string | null>(null);
-  const [dragOverStepId, setDragOverStepId] = React.useState<string | null>(null);
-  const reorderSteps = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return;
-    setSteps((prev) => {
-      const from = prev.findIndex((s) => s.id === draggedId);
-      const to = prev.findIndex((s) => s.id === targetId);
-      if (from < 0 || to < 0) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  };
+  const stepDrag = useDragReorder(setSteps);
 
   const handleStepImageChange = (id: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -301,7 +299,14 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
         JSON.stringify(
           ingredients
             .filter((i) => i.name.trim())
-            .map((i) => ({ id: i.id, quantity: i.quantity.trim(), unit: i.unit.trim(), name: i.name.trim(), note: i.note.trim() }))
+            .map((i) => ({
+              id: i.id,
+              quantity: i.isGroup ? "" : i.quantity.trim(),
+              unit: i.isGroup ? "" : i.unit.trim(),
+              name: i.name.trim(),
+              note: i.isGroup ? "" : i.note.trim(),
+              isGroup: i.isGroup,
+            }))
         )
       );
       form.set(
@@ -545,6 +550,10 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
                   <ClipboardPaste className="size-3.5" />
                   Paste list
                 </Button>
+                <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addGroup}>
+                  <Heading className="size-3.5" />
+                  Add section
+                </Button>
                 <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={addIngredient}>
                   <Plus className="size-3.5" />
                   Add
@@ -579,68 +588,116 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
               </div>
             )}
             <div className="flex flex-col gap-2">
-              {ingredients.map((row) => (
-                <div key={row.id} className="flex items-center gap-2">
-                  <Input
-                    value={row.quantity}
-                    onChange={(e) => updateIngredient(row.id, { quantity: e.target.value })}
-                    placeholder="2"
-                    className="w-16 shrink-0"
-                  />
-                  {row.customUnit ? (
-                    <div className="relative w-24 shrink-0">
-                      <Input
-                        autoFocus
-                        value={row.unit}
-                        onChange={(e) => updateIngredient(row.id, { unit: e.target.value })}
-                        placeholder="unit"
-                        className="pr-7"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => updateIngredient(row.id, { customUnit: false, unit: "" })}
-                        aria-label="Choose from unit list"
-                        className="absolute inset-y-0 right-1.5 flex items-center text-muted-foreground hover:text-foreground"
-                      >
-                        <ChevronDown className="size-3.5" />
-                      </button>
-                    </div>
-                  ) : (
-                    <select
-                      value={row.unit}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === CUSTOM_UNIT) updateIngredient(row.id, { customUnit: true, unit: "" });
-                        else updateIngredient(row.id, { unit: value });
-                      }}
-                      className="h-9 w-24 shrink-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                    >
-                      <option value="">unit</option>
-                      {UNIT_OPTIONS.map((u) => (
-                        <option key={u} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                      <option value={CUSTOM_UNIT}>Custom…</option>
-                    </select>
-                  )}
-                  <Input
-                    value={row.name}
-                    onChange={(e) => updateIngredient(row.id, { name: e.target.value })}
-                    placeholder="flour"
-                    className="flex-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeIngredient(row.id)}
-                    aria-label="Remove ingredient"
-                    disabled={ingredients.length <= 1}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+              {ingredients.map((row) =>
+                row.isGroup ? (
+                  <div
+                    key={row.id}
+                    {...ingredientDrag.dropTargetProps(row.id)}
+                    className={cn(
+                      "mt-1 flex items-center gap-2 border-t-2 border-transparent first:mt-0",
+                      ingredientDrag.isDropTarget(row.id) && "border-ring",
+                      ingredientDrag.isDragged(row.id) && "opacity-40"
+                    )}
                   >
-                    <X className="size-3.5" />
-                  </button>
-                </div>
-              ))}
+                    <div
+                      {...ingredientDrag.handleProps(row.id)}
+                      className="flex size-8 shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing"
+                    >
+                      <GripVertical className="size-4" />
+                    </div>
+                    <Input
+                      value={row.name}
+                      onChange={(e) => updateIngredient(row.id, { name: e.target.value })}
+                      placeholder="Section name, e.g. Filling"
+                      className="flex-1 font-bold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(row.id)}
+                      aria-label="Remove section"
+                      disabled={ingredients.length <= 1}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    key={row.id}
+                    {...ingredientDrag.dropTargetProps(row.id)}
+                    className={cn(
+                      "flex items-center gap-2 border-t-2 border-transparent",
+                      ingredientDrag.isDropTarget(row.id) && "border-ring",
+                      ingredientDrag.isDragged(row.id) && "opacity-40"
+                    )}
+                  >
+                    <div
+                      {...ingredientDrag.handleProps(row.id)}
+                      className="flex size-8 shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing"
+                    >
+                      <GripVertical className="size-4" />
+                    </div>
+                    <Input
+                      value={row.quantity}
+                      onChange={(e) => updateIngredient(row.id, { quantity: e.target.value })}
+                      placeholder="2"
+                      className="w-16 shrink-0"
+                    />
+                    {row.customUnit ? (
+                      <div className="relative w-24 shrink-0">
+                        <Input
+                          autoFocus
+                          value={row.unit}
+                          onChange={(e) => updateIngredient(row.id, { unit: e.target.value })}
+                          placeholder="unit"
+                          className="pr-7"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateIngredient(row.id, { customUnit: false, unit: "" })}
+                          aria-label="Choose from unit list"
+                          className="absolute inset-y-0 right-1.5 flex items-center text-muted-foreground hover:text-foreground"
+                        >
+                          <ChevronDown className="size-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={row.unit}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === CUSTOM_UNIT) updateIngredient(row.id, { customUnit: true, unit: "" });
+                          else updateIngredient(row.id, { unit: value });
+                        }}
+                        className="h-9 w-24 shrink-0 rounded-lg border border-input bg-transparent px-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        <option value="">unit</option>
+                        {UNIT_OPTIONS.map((u) => (
+                          <option key={u} value={u}>
+                            {u}
+                          </option>
+                        ))}
+                        <option value={CUSTOM_UNIT}>Custom…</option>
+                      </select>
+                    )}
+                    <Input
+                      value={row.name}
+                      onChange={(e) => updateIngredient(row.id, { name: e.target.value })}
+                      placeholder="flour"
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(row.id)}
+                      aria-label="Remove ingredient"
+                      disabled={ingredients.length <= 1}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ),
+              )}
             </div>
           </div>
 
@@ -666,45 +723,19 @@ export function RecipeFormDrawer({ mode, recipe, open, onOpenChange, onSaved }: 
                     : null;
                 const previewUrl = step.newPreviewUrl ?? existingUrl;
 
-                const isDropTarget =
-                  dragOverStepId === step.id && !!draggedStepId && draggedStepId !== step.id;
-
                 return (
                   <div
                     key={step.id}
-                    onDragOver={(e) => {
-                      if (draggedStepId) e.preventDefault();
-                    }}
-                    onDragEnter={() => {
-                      if (draggedStepId && draggedStepId !== step.id) setDragOverStepId(step.id);
-                    }}
-                    onDragLeave={(e) => {
-                      // dragenter/dragleave fire when moving onto a child too —
-                      // only clear once the pointer actually left the row.
-                      if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                      setDragOverStepId((prev) => (prev === step.id ? null : prev));
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedStepId) reorderSteps(draggedStepId, step.id);
-                      setDraggedStepId(null);
-                      setDragOverStepId(null);
-                    }}
+                    {...stepDrag.dropTargetProps(step.id)}
                     className={cn(
                       "flex gap-3 py-3 first:pt-0 last:pb-0",
                       index > 0 && "border-t transition-colors duration-150",
-                      index > 0 && (isDropTarget ? "border-t-2 border-ring" : "border-border/60"),
-                      draggedStepId === step.id && "opacity-40"
+                      index > 0 && (stepDrag.isDropTarget(step.id) ? "border-t-2 border-ring" : "border-border/60"),
+                      stepDrag.isDragged(step.id) && "opacity-40"
                     )}
                   >
                     <div
-                      draggable
-                      onDragStart={() => setDraggedStepId(step.id)}
-                      onDragEnd={() => {
-                        setDraggedStepId(null);
-                        setDragOverStepId(null);
-                      }}
-                      title="Drag to reorder"
+                      {...stepDrag.handleProps(step.id)}
                       className="mt-1 flex size-6 shrink-0 cursor-grab items-center justify-center rounded-full bg-muted text-xs font-semibold select-none active:cursor-grabbing"
                     >
                       {index + 1}

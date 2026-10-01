@@ -42,7 +42,7 @@ export function buildShoppingList(entries: { recipe: Recipe; factor: number }[])
   const items: ScaledItem[] = [];
   for (const { recipe, factor } of entries) {
     for (const ingredient of recipe.ingredients) {
-      if (!ingredient.name.trim()) continue;
+      if (!ingredient.name.trim() || ingredient.isGroup) continue;
       const parsed = ingredient.quantity ? parseQuantityToNumber(ingredient.quantity) : null;
       items.push({
         recipeId: recipe.id,

@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { useLibraryShell } from "@/components/library/library-shell-context";
+import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { DEMO_MODE } from "@/lib/demo-mode";
 import { ManageProfilesPanel } from "./manage-profiles-panel";
 import { StatsPanel } from "./stats-panel";
@@ -169,23 +170,10 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
   const [savingDiscoverySources, setSavingDiscoverySources] = React.useState(false);
   const discoverySourcesDirty =
     JSON.stringify(discoverySources) !== JSON.stringify(settings.recipeDiscoverySources);
-  const [draggedSourceId, setDraggedSourceId] = React.useState<string | null>(null);
-  const [dragOverSourceId, setDragOverSourceId] = React.useState<string | null>(null);
+  const sourceDrag = useDragReorder(setDiscoverySources);
   // Which sources have their (optional, rarely-needed) browse URL field
   // expanded — collapsed by default to keep each row to one line.
   const [expandedBrowseUrlIds, setExpandedBrowseUrlIds] = React.useState<Set<string>>(new Set());
-  const reorderDiscoverySources = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return;
-    setDiscoverySources((prev) => {
-      const from = prev.findIndex((s) => s.id === draggedId);
-      const to = prev.findIndex((s) => s.id === targetId);
-      if (from < 0 || to < 0) return prev;
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved);
-      return next;
-    });
-  };
 
   React.useEffect(() => {
     setName(profile.name);
@@ -674,44 +662,19 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
             ) : (
               <div className="flex flex-col">
                 {discoverySources.map((source, index) => {
-                  const isDropTarget =
-                    dragOverSourceId === source.id && !!draggedSourceId && draggedSourceId !== source.id;
                   return (
                     <div
                       key={source.id}
-                      onDragOver={(e) => {
-                        if (draggedSourceId) e.preventDefault();
-                      }}
-                      onDragEnter={() => {
-                        if (draggedSourceId && draggedSourceId !== source.id) setDragOverSourceId(source.id);
-                      }}
-                      onDragLeave={(e) => {
-                        // dragenter/dragleave fire when moving onto a child too —
-                        // only clear once the pointer actually left the row.
-                        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-                        setDragOverSourceId((prev) => (prev === source.id ? null : prev));
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        if (draggedSourceId) reorderDiscoverySources(draggedSourceId, source.id);
-                        setDraggedSourceId(null);
-                        setDragOverSourceId(null);
-                      }}
+                      {...sourceDrag.dropTargetProps(source.id)}
                       className={cn(
                         "flex flex-col gap-2 py-4 sm:flex-row sm:items-start",
                         index > 0 && "border-t transition-colors duration-150",
-                        index > 0 && (isDropTarget ? "border-t-2 border-ring" : "border-border/60"),
-                        draggedSourceId === source.id && "opacity-40"
+                        index > 0 && (sourceDrag.isDropTarget(source.id) ? "border-t-2 border-ring" : "border-border/60"),
+                        sourceDrag.isDragged(source.id) && "opacity-40"
                       )}
                     >
                       <div
-                        draggable
-                        onDragStart={() => setDraggedSourceId(source.id)}
-                        onDragEnd={() => {
-                          setDraggedSourceId(null);
-                          setDragOverSourceId(null);
-                        }}
-                        title="Drag to reorder"
+                        {...sourceDrag.handleProps(source.id)}
                         className="hidden shrink-0 cursor-grab items-center justify-center text-muted-foreground select-none active:cursor-grabbing sm:flex sm:h-9"
                       >
                         <GripVertical className="size-4" />

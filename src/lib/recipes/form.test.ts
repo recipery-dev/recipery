@@ -53,6 +53,22 @@ describe("parseIngredientsField", () => {
     expect(parseIngredientsField("{not valid")).toEqual([]);
     expect(parseIngredientsField(JSON.stringify("just a string"))).toEqual([]);
   });
+
+  it("keeps isGroup rows but strips quantity/unit/note even if sent", () => {
+    const raw = JSON.stringify([
+      { name: "Filling", isGroup: true, quantity: "2", unit: "cup", note: "ignored" },
+    ]);
+    const [group] = parseIngredientsField(raw);
+    expect(group).toEqual(expect.objectContaining({ name: "Filling", isGroup: true }));
+    expect(group.quantity).toBeUndefined();
+    expect(group.unit).toBeUndefined();
+    expect(group.note).toBeUndefined();
+  });
+
+  it("leaves isGroup undefined for a normal ingredient", () => {
+    const [ingredient] = parseIngredientsField(JSON.stringify([{ name: "flour" }]));
+    expect(ingredient.isGroup).toBeUndefined();
+  });
 });
 
 describe("parseStepsField", () => {

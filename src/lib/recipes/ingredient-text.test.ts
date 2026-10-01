@@ -80,4 +80,21 @@ describe("parseIngredientListText", () => {
   it("returns an empty array for blank input", () => {
     expect(parseIngredientListText("   \n\n  ")).toEqual([]);
   });
+
+  it("recognizes a quantity-less line ending in a colon as a section header", () => {
+    const text = ["For the cake:", "200g flour", "2 eggs", "Filling:", "100g sugar"].join("\n");
+    expect(parseIngredientListText(text)).toEqual([
+      { name: "For the cake", isGroup: true },
+      { quantity: "200", unit: "g", name: "flour" },
+      { quantity: "2", name: "eggs" },
+      { name: "Filling", isGroup: true },
+      { quantity: "100", unit: "g", name: "sugar" },
+    ]);
+  });
+
+  it("doesn't mistake a quantity line ending in a colon for a header", () => {
+    expect(parseIngredientListText("1 cup broth:")).toEqual([
+      { quantity: "1", unit: "cup", name: "broth:" },
+    ]);
+  });
 });

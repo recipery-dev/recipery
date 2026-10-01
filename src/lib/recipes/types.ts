@@ -6,6 +6,10 @@ export interface RecipeIngredient {
   unit?: string;
   name: string;
   note?: string;
+  /** A section header ("Filling", "Frosting") rather than a real ingredient
+   * — `name` holds the header text, quantity/unit/note are unused. Renders
+   * as a heading and is skipped by scaling, the shopping list, and search. */
+  isGroup?: boolean;
 }
 
 export interface RecipeStep {

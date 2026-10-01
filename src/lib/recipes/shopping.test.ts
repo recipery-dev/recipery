@@ -112,4 +112,13 @@ describe("buildShoppingList", () => {
     const lines = buildShoppingList([{ recipe: a, factor: 1 }]);
     expect(lines.map((l) => l.name)).toEqual(["apple", "Mango", "Zucchini"]);
   });
+
+  it("skips section headers (isGroup rows) — they aren't real ingredients", () => {
+    const a = makeRecipe("a", "Recipe A", [
+      ingredient({ name: "Filling", isGroup: true }),
+      ingredient({ name: "sugar", quantity: "1" }),
+    ]);
+    const lines = buildShoppingList([{ recipe: a, factor: 1 }]);
+    expect(lines.map((l) => l.name)).toEqual(["sugar"]);
+  });
 });

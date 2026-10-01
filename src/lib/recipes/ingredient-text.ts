@@ -10,6 +10,7 @@ export interface ParsedIngredient {
   quantity?: string;
   unit?: string;
   name: string;
+  isGroup?: boolean;
 }
 
 // Matches a unit at the start of the remaining text and normalizes it to the
@@ -73,11 +74,23 @@ export function parseIngredientLine(rawLine: string): ParsedIngredient {
   return { quantity, name: afterQuantity || line };
 }
 
-/** Splits pasted text into one ingredient per non-empty line. */
+// A line with no quantity that ends in a colon — "For the filling:",
+// "Frosting:" — is how recipe sites and people typing from memory write a
+// section header, so the paste box recognizes it as one instead of trying
+// to parse it as an ingredient.
+function isGroupHeaderLine(line: string): boolean {
+  return !INGREDIENT_QUANTITY_PATTERN.test(line) && line.endsWith(":");
+}
+
+/** Splits pasted text into one ingredient (or section header) per non-empty line. */
 export function parseIngredientListText(text: string): ParsedIngredient[] {
   return text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map(parseIngredientLine);
+    .map((line) =>
+      isGroupHeaderLine(line)
+        ? { name: line.slice(0, -1).trim(), isGroup: true }
+        : parseIngredientLine(line)
+    );
 }

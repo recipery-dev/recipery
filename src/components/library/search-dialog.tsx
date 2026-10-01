@@ -31,7 +31,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           recipe.title.toLowerCase().includes(q) ||
           (recipe.source?.toLowerCase().includes(q) ?? false) ||
           recipe.tags.some((t) => t.toLowerCase().includes(q)) ||
-          recipe.ingredients.some((i) => i.name.toLowerCase().includes(q))
+          recipe.ingredients.some((i) => !i.isGroup && i.name.toLowerCase().includes(q))
       )
     : [];
   const results = matches.slice(0, resultLimit);

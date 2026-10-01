@@ -30,6 +30,13 @@ export function IngredientChecklist({
   return (
     <ul className={cn("flex flex-col gap-2", className)}>
       {ingredients.map((ingredient) => {
+        if (ingredient.isGroup) {
+          return (
+            <li key={ingredient.id} className="mt-2 text-sm font-bold first:mt-0">
+              {ingredient.name}
+            </li>
+          );
+        }
         const isChecked = checked.has(ingredient.id);
         const quantity = scaleQuantity(ingredient.quantity, factor);
         const gramHint = (() => {
