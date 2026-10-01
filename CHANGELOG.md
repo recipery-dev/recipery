@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/recipery-dev/recipery/compare/v1.24.0...v1.25.0) (2026-10-01)
+
+
+### Features
+
+* add recipe duplication functionality ([fd65565](https://github.com/recipery-dev/recipery/commit/fd65565c462b7097a1048781eedc9f5a3246abe8))
+
 ## [1.24.0](https://github.com/recipery-dev/recipery/compare/v1.23.0...v1.24.0) (2026-09-06)
 
 
