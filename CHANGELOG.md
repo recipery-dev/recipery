@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.1](https://github.com/recipery-dev/recipery/compare/v1.26.0...v1.26.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* update recipe handling in edit mode to prevent stale data ([40149ac](https://github.com/recipery-dev/recipery/commit/40149acefddd84be63c58fad70535e0d2b973ab4))
+
 ## [1.26.0](https://github.com/recipery-dev/recipery/compare/v1.25.0...v1.26.0) (2026-10-01)
 
 
