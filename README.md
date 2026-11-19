@@ -74,6 +74,8 @@ Full docs are at [docs.recipery.dev](https://docs.recipery.dev).
   ratings and cook tracking
 - Multi-profile support (admin/reader roles) with optional per-profile
   passwords, so a household can share one instance without sharing an account
+- Built-in MCP endpoint, so Claude and other MCP clients can search, add,
+  and organize your recipes (Settings → MCP shows how to connect)
 - Pluggable storage driver: local filesystem or S3-compatible object storage
   (MinIO, Cloudflare R2, Backblaze B2, ...), including a configurable
   directory prefix for sharing a bucket with other apps

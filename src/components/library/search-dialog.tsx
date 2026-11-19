@@ -5,6 +5,7 @@ import { Search, ChefHat, SearchX } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { RecipePhoto } from "./recipe-photo";
 import { useLibraryShell } from "./library-shell-context";
+import { recipeMatchesQuery } from "@/lib/recipes/search";
 
 interface SearchDialogProps {
   open: boolean;
@@ -25,15 +26,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   }, [open]);
 
   const q = query.trim().toLowerCase();
-  const matches = q
-    ? recipes.filter(
-        (recipe) =>
-          recipe.title.toLowerCase().includes(q) ||
-          (recipe.source?.toLowerCase().includes(q) ?? false) ||
-          recipe.tags.some((t) => t.toLowerCase().includes(q)) ||
-          recipe.ingredients.some((i) => !i.isGroup && i.name.toLowerCase().includes(q))
-      )
-    : [];
+  const matches = q ? recipes.filter((recipe) => recipeMatchesQuery(recipe, q)) : [];
   const results = matches.slice(0, resultLimit);
 
   const pick = (recipe: (typeof recipes)[number]) => {
