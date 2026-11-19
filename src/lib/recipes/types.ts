@@ -49,6 +49,38 @@ export interface RecipeRecord {
   coverUpdatedAt?: string;
 }
 
+/** Everything a user edits on a recipe — a record minus the server-managed
+ * parts (id, addedAt, photo bookkeeping). */
+export type RecipeFields = Pick<
+  RecipeRecord,
+  | "title"
+  | "source"
+  | "sourceUrl"
+  | "videoUrl"
+  | "description"
+  | "servings"
+  | "prepMinutes"
+  | "cookMinutes"
+  | "difficulty"
+  | "cuisine"
+  | "tags"
+  | "ingredients"
+  | "steps"
+>;
+
+export interface ImageUpload {
+  data: Buffer;
+  contentType: string;
+}
+
+/** Photos that come with a create/edit — a new cover, or step photos keyed
+ * by step id. `removeCover` only matters on edit. */
+export interface RecipeImages {
+  cover?: ImageUpload;
+  removeCover?: boolean;
+  steps: Record<string, ImageUpload>;
+}
+
 /**
  * UI-facing shape: a recipe record plus a resolved photo URL and the active
  * profile's state. Rating/favorite/cooked/lastCookedAt live in

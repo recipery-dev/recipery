@@ -16,6 +16,7 @@ import {
   Trash2,
   GripVertical,
   ChevronDown,
+  Plug,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { useDragReorder } from "@/hooks/use-drag-reorder";
 import { DEMO_MODE } from "@/lib/demo-mode";
 import { ManageProfilesPanel } from "./manage-profiles-panel";
 import { StatsPanel } from "./stats-panel";
+import { McpPanel } from "./mcp-panel";
 import { PROFILE_COLORS, type PublicProfile } from "@/lib/profiles/types";
 import type { PublicAppSettings, RecipeDiscoverySource } from "@/lib/settings/types";
 
@@ -36,7 +38,7 @@ interface SettingsPanelProps {
   profile: PublicProfile;
 }
 
-type Category = "profile" | "stats" | "theme" | "profiles" | "library" | "discovery" | "backup";
+type Category = "profile" | "stats" | "theme" | "profiles" | "library" | "discovery" | "mcp" | "backup";
 
 const CATEGORIES: {
   id: Category;
@@ -50,6 +52,7 @@ const CATEGORIES: {
   { id: "theme", label: "Theme", icon: Moon },
   { id: "library", label: "Library", icon: LayoutGrid, adminOnly: true },
   { id: "discovery", label: "Recipe Discovery", icon: Compass, adminOnly: true },
+  { id: "mcp", label: "MCP", icon: Plug },
   { id: "backup", label: "Backup", icon: Download, adminOnly: true },
 ];
 
@@ -750,6 +753,15 @@ export function SettingsPanel({ settings, profile }: SettingsPanelProps) {
                 })}
               </div>
             )}
+          </SectionCard>
+        )}
+
+        {category === "mcp" && (
+          <SectionCard
+            title="MCP"
+            description="Let Claude and other AI assistants work with your recipes."
+          >
+            <McpPanel />
           </SectionCard>
         )}
 
