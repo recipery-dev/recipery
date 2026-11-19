@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/recipery-dev/recipery/compare/v1.26.1...v1.27.0) (2026-11-19)
+
+
+### Features
+
+* add MCP endpoint so Claude can manage recipes ([1a9f716](https://github.com/recipery-dev/recipery/commit/1a9f7164b4b38e4fb21d41c49653608a114d0efa))
+
 ## [1.26.1](https://github.com/recipery-dev/recipery/compare/v1.26.0...v1.26.1) (2026-10-03)
 
 
