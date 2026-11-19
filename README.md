@@ -80,6 +80,16 @@ Full docs are at [docs.recipery.dev](https://docs.recipery.dev).
   (MinIO, Cloudflare R2, Backblaze B2, ...), including a configurable
   directory prefix for sharing a bucket with other apps
 
+## Use with Claude (MCP)
+
+Recipery has a built-in MCP endpoint at `/api/mcp`. It lets Claude search, add, edit, and organize recipes, manage collections, and build your shopping list. Add it to Claude Code with:
+
+```sh
+claude mcp add --transport http recipery http://localhost:3000/api/mcp
+```
+
+There is no auth on this endpoint, so only expose it on a private network (like Tailscale). Set `MCP_PROFILE_ID` to choose which profile it acts as. Settings → MCP has the full tool list and setup for Claude Desktop.
+
 ## License
 
 Recipery is licensed under the [GNU Affero General Public License v3.0](LICENSE).
