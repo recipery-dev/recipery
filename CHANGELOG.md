@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/recipery-dev/recipery/compare/v1.27.0...v1.27.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* skip OpenNext Next.js version gate in Cloudflare build ([a7b4c80](https://github.com/recipery-dev/recipery/commit/a7b4c80eec801c6c93b4c993227a63400e2a8731))
+
 ## [1.27.0](https://github.com/recipery-dev/recipery/compare/v1.26.1...v1.27.0) (2026-11-19)
 
 
